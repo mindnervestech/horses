@@ -27,7 +27,7 @@ public class Bet extends Model {
 	@ManyToOne
 	public Event event;
 	@Version
-        public Timestamp lastUpdate; 
+        public java.util.Date version
 	
 	
 	public static Finder<Long,Bet> find = new Finder<>(Long.class,Bet.class);

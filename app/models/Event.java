@@ -32,7 +32,7 @@ public class Event extends Model {
 	public String betName;
 	public String betTypeId;
 	@Version
-       public java.util.Date version
+       public java.util.Date version;
 	
 	@OneToMany(cascade=CascadeType.ALL)
 	public List<Bet> bet;
