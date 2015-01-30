@@ -119,7 +119,9 @@ public class Application extends Controller {
     					}
     					Bet betObject = Bet.findByBetId(bet.betId);
     					if(betObject != null) {
+    						betObject.name = bet.name;
     						betObject.shortName = bet.shortName;
+    						betObject.betId = bet.betId;
     						betObject.price = bet.price;
     						betObject.priceDecimal = bet.priceDecimal;
     						betObject.priceUs = bet.priceUs;
