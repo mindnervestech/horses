@@ -124,7 +124,7 @@ public class Application extends Controller {
     						betObject.priceDecimal = bet.priceDecimal;
     						betObject.priceUs = bet.priceUs;
     						betObject.activePriceTypes = bet.activePriceTypes;
-    						betObject.update();
+    						Ebean.update(betObject);
     					} else {
     						bet.event = event;
         					betList.add(bet);
