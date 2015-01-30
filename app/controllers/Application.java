@@ -17,6 +17,7 @@ import javax.xml.parsers.DocumentBuilderFactory;
 
 import models.Bet;
 import models.Event;
+import models.User;
 
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
@@ -27,6 +28,8 @@ import com.avaje.ebean.Ebean;
 import com.avaje.ebean.SqlRow;
 
 import play.*;
+import play.data.DynamicForm;
+import play.data.Form;
 import play.libs.Json;
 import play.mvc.*;
 import scala.Array;
@@ -219,6 +222,107 @@ public class Application extends Controller {
     		vmList.add(vm);
     	}
     	return ok(Json.toJson(vmList));
+    }
+    
+    public static Result register() {
+    	try{
+    		Form<RegisterForm> form = DynamicForm.form(RegisterForm.class).bindFromRequest();
+    		RegisterForm rForm = form.get();
+    		if(     rForm.userName.isEmpty()||
+    				rForm.userName==null||
+    				rForm.password.isEmpty()||
+    	    		rForm.password==null||
+    				rForm.email==null||
+    				rForm.email.isEmpty()) {
+    			return ok(Json.toJson(new ErrorResponse(Error.E202.getCode(), Error.E202.getMessage())));
+    		} else {
+    			
+    			if(User.findByUserEmail(rForm.email)!=null) {
+    				return ok(Json.toJson(new ErrorResponse(Error.E210.getCode(), Error.E210.getMessage())));
+    			} 
+    			
+    			User userObj = new User();
+    			userObj.userName = rForm.userName;
+    			userObj.password = User.md5Encryption(rForm.password);
+    			userObj.email = rForm.email;
+    			userObj.save();
+    			
+    			return ok(Json.toJson(new ErrorResponse(Error.E204.getCode(), Error.E204.getMessage())));
+    		}
+    	} catch(Exception e) {
+    		return ok(Json.toJson(new ErrorResponse("500",e.getMessage())));
+    	}
+    }
+    
+    public static class RegisterForm {
+    	public String userName;
+    	public String password;
+    	public String email;
+    }
+    
+    public static class ErrorResponse {
+    	public String code;
+    	public String message;
+    	public ErrorResponse(String code,String message) {
+    		this.code = code;
+    		this.message = message;
+    	}
+    }
+    
+    public enum Error {
+    	E201("201","Login Failed!"),
+    	E202("202","Required Field Missing!"),
+    	E200("200","Login Successful!"),
+    	E203("203","Invalid Country Code"),
+    	E204("204","User Registered Successfully!"),
+    	E205("205","User is not verified yet"),
+    	E206("206","Mobile Number is not Valid Number!"),
+    	E207("207","Verification Code is Invalid!"),
+    	E208("208","Username, Password does'nt matched with our database!"),
+    	E209("209","User Validated Successfully!"),
+    	E210("210","User Already Exist!"),
+    	E211("211","User Does Not Exist");
+    	Error(String code,String message) {
+    		this.code = code;
+    		this.message = message;
+    	}
+    	
+    	private String code;
+    	private String message;
+		
+    	public String getCode() {
+			return code;
+		}
+		public String getMessage() {
+			return message;
+		}
+    	
+    }
+    
+    public static class LoginForm {
+    	public String userName;
+    	public String password;
+    }
+    
+    public static Result login() {
+    	try {
+    		Form<LoginForm> form = DynamicForm.form(LoginForm.class).bindFromRequest();
+    		String username = form.data().get("userName");
+    		String password = form.data().get("password");
+    		if(username==null || username.isEmpty() || password==null || password.isEmpty()) {
+    			return ok(Json.toJson(new ErrorResponse(Error.E202.getCode(), Error.E202.getMessage())));
+    		} else {
+    			
+    			User user = User.getUserByUserNameAndPassword(username, password);
+    			if(user == null) {
+    				return ok(Json.toJson(new ErrorResponse(Error.E201.getCode(),Error.E201.getMessage())));
+    			}
+    			
+    			return ok(Json.toJson(new ErrorResponse(Error.E200.getCode(),Error.E200.getMessage())));
+    		}
+    	} catch(Exception e) {
+    		return ok(Json.toJson(new ErrorResponse("500",e.getMessage())));
+    	} 
     }
     
 }
