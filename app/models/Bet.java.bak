@@ -26,6 +26,9 @@ public class Bet extends Model {
 	public String activePriceTypes;
 	@ManyToOne
 	public Event event;
+	@Version
+        public Timestamp lastUpdate; 
+	
 	
 	public static Finder<Long,Bet> find = new Finder<>(Long.class,Bet.class);
 	
