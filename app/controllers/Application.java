@@ -1,42 +1,46 @@
 package controllers;
 
 import java.io.BufferedReader;
-import java.io.File;
+import java.io.IOException;
 import java.io.InputStreamReader;
 import java.net.URL;
-import java.net.URLConnection;
+import java.text.DateFormat;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
 
 import models.Bet;
 import models.Event;
+import models.Results;
 import models.User;
 
+import org.json.JSONObject;
+import org.jsoup.Jsoup;
+import org.jsoup.select.Elements;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
 
-import com.avaje.ebean.Ebean;
-import com.avaje.ebean.SqlRow;
-
-import play.*;
 import play.data.DynamicForm;
 import play.data.Form;
 import play.libs.Json;
-import play.mvc.*;
-import scala.Array;
-
+import play.mvc.Controller;
+import play.mvc.Result;
 import viewmodel.BetVM;
 import viewmodel.EventVM;
-import views.html.*;
+import views.html.index;
+
+import com.avaje.ebean.Ebean;
+import com.avaje.ebean.SqlRow;
 
 public class Application extends Controller {
   
@@ -323,6 +327,66 @@ public class Application extends Controller {
     	} catch(Exception e) {
     		return ok(Json.toJson(new ErrorResponse("500",e.getMessage())));
     	} 
+    }
+    
+    public static Result getResults() throws ParseException{
+    	org.jsoup.nodes.Document doc = null;
+		try {
+			doc = Jsoup.connect("http://betfred.chromaagency.com/results/meeting/16172").get();
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+		org.jsoup.nodes.Element main = doc.getElementById("main");
+		Elements tables = main.getElementsByClass("table10");
+		Date d = new Date();
+		SimpleDateFormat dtdf = new SimpleDateFormat("yyyy-MM-dd");
+    	SimpleDateFormat timedf = new SimpleDateFormat("HH:mm");
+		for(org.jsoup.nodes.Element t:tables){
+			Results res = new Results();
+			res.eventDate = dtdf.parse(dtdf.format(d));
+			org.jsoup.nodes.Element row = t.getElementsByTag("tr").first();
+			Elements columns = row.children();
+			Map<String, Object> mainMap = new HashMap<>();
+			List<Map<String,Object>> maps = new ArrayList<>();
+			for(org.jsoup.nodes.Element c:columns){
+				if(columns.indexOf(c) == 0){
+					org.jsoup.nodes.Element time = c.getElementsByTag("strong").first();
+					String[] timeVenue = time.text().split(" ", 2);
+					res.venue = timeVenue[1];
+					res.meeting = timeVenue[1];
+					String[] strArr = timeVenue[0].split("\\.", 2);
+					res.eventTime = timedf.parse(strArr[0]+ ":" + strArr[1]);
+				}
+				if(columns.indexOf(c) == 1){
+					Elements ranks = c.getElementsByTag("tr");
+					int count = 1;
+					for(org.jsoup.nodes.Element r:ranks){
+						Map<String, Object> map = new HashMap<>();
+						map.put("position", count++);
+						org.jsoup.nodes.Element info = r.getElementsByTag("td").get(3);
+						Elements data = info.getElementsByTag("li"); 
+						for(org.jsoup.nodes.Element i:data){
+							if(data.indexOf(i) == 0){
+								map.put("name", i.children().first().text());
+							}
+							if(data.indexOf(i) == 1){
+								map.put("odds", i.text());
+							}
+							if(data.indexOf(i) == 2){
+								map.put("trainer", i.children().first().text());
+								map.put("jockey", i.children().last().text());
+							}
+						}
+						maps.add(map);
+					}
+				}
+			}
+			mainMap.put("results", maps);
+			JSONObject obj = new JSONObject(mainMap);
+			res.results = obj.toString();
+			res.save();
+		}
+    	return ok();
     }
     
 }
