@@ -15,4 +15,4 @@ POST    /login                      controllers.Application.login()
 # Map static resources from the /public folder to the /assets URL path
 GET     /assets/*file               controllers.Assets.at(path="/public", file)
 
-POST	/getResults					controllers.Application.getResults()
+GET		/getResults					controllers.Application.getResults()

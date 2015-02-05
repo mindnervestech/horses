@@ -14,7 +14,8 @@ public class User extends Model {
 
 	@Id
 	public Long id;
-	public String userName;
+	public String firstName;
+	public String lastName;
 	public String password;
 	public String email;
 	
@@ -24,8 +25,8 @@ public class User extends Model {
 		return find.where().eq("email", email).findUnique();
 	}
 	
-	public static User getUserByUserNameAndPassword(String username,String password) throws NoSuchAlgorithmException {
-		return find.where().eq("userName", username).eq("password",User.md5Encryption(password)).findUnique();
+	public static User getUserByUserNameAndPassword(String email,String password) throws NoSuchAlgorithmException {
+		return find.where().eq("email", email).eq("password",User.md5Encryption(password)).findUnique();
 	}
 	
 	public static String md5Encryption(String password) throws NoSuchAlgorithmException { 
