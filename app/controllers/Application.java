@@ -333,8 +333,12 @@ public class Application extends Controller {
     			if(user == null) {
     				return ok(Json.toJson(new ErrorResponse(Error.E201.getCode(),Error.E201.getMessage())));
     			}
-    			
-    			return ok(Json.toJson(new ErrorResponse(Error.E200.getCode(),Error.E200.getMessage())));
+    			Map<String, Object> map = new HashMap<>();
+    			map.put("message", Error.E200.getMessage());
+    			map.put("email", email);
+    			map.put("firstName", user.firstName);
+    			map.put("lastName", user.lastName);
+    			return ok(Json.toJson(map));
     		}
     	} catch(Exception e) {
     		return ok(Json.toJson(new ErrorResponse("500",e.getMessage())));
