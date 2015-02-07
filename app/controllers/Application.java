@@ -359,7 +359,7 @@ public class Application extends Controller {
     public static Result getResults() throws ParseException{
     	org.jsoup.nodes.Document doc = null;
 		try {
-			doc = Jsoup.connect("http://betfred.chromaagency.com/results/").get();
+			doc = Jsoup.connect("http://betfred.chromaagency.com/results/meeting/16196").get();
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
@@ -453,6 +453,9 @@ public class Application extends Controller {
 			    vm.results.add(extra);
 			}
 			results.add(vm);
+		}
+		if(results.size() == 0){
+			return ok("No matches today.");
 		}
     	return ok(Json.toJson(results));
     }
