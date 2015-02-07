@@ -10,10 +10,8 @@ import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.HashMap;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
-import java.util.Map.Entry;
 
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
@@ -33,6 +31,7 @@ import org.w3c.dom.Element;
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
 
+import play.Play;
 import play.data.DynamicForm;
 import play.data.Form;
 import play.libs.Json;
@@ -44,11 +43,15 @@ import views.html.index;
 
 import com.avaje.ebean.Ebean;
 import com.avaje.ebean.SqlRow;
+import com.notnoop.apns.APNS;
+import com.notnoop.apns.ApnsService;
 
 import controllers.Application.ResultsVM.Rank;
 
 public class Application extends Controller {
   
+	public static final String lCertificate = Play.application().configuration().getString("certificate_loc");
+	
     public static Result index() {
         return ok(index.render("Your new application is ready."));
     }
@@ -359,7 +362,7 @@ public class Application extends Controller {
     public static Result getResults() throws ParseException{
     	org.jsoup.nodes.Document doc = null;
 		try {
-			doc = Jsoup.connect("http://betfred.chromaagency.com/results/meeting/16196").get();
+			doc = Jsoup.connect("http://betfred.chromaagency.com/results").get();
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
@@ -459,5 +462,21 @@ public class Application extends Controller {
 		}
     	return ok(Json.toJson(results));
     }
+    
+    public static Result sendPushNotification(String deviceToken, String msg) {
+        System.out.println("sendPushNotification " + lCertificate);
+        String password = "";
+        ApnsService service =
+                APNS.newService()
+                .withCert(lCertificate, password)
+                .withSandboxDestination()
+                .build();
+        System.out.println("sendPushNotification");
+        String payload = APNS.newPayload().alertBody(msg).build();
+        com.notnoop.apns.ApnsNotification notification = service.push(deviceToken, payload);
+        System.out.println("Sending notification message!");
+        return ok();
+    }
+        
     
 }
