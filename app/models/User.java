@@ -2,9 +2,12 @@ package models;
 
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
+import java.util.List;
 
+import javax.persistence.CascadeType;
 import javax.persistence.Entity;
 import javax.persistence.Id;
+import javax.persistence.OneToMany;
 
 import play.db.ebean.Model;
 import play.db.ebean.Model.Finder;
@@ -18,6 +21,9 @@ public class User extends Model {
 	public String lastName;
 	public String password;
 	public String email;
+	
+	@OneToMany(cascade=CascadeType.ALL)
+	public List<UserBet> userBet;
 	
 	public static Finder<Long,User> find = new Finder<>(Long.class,User.class);
 	

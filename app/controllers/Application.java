@@ -4,12 +4,14 @@ import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.net.URL;
+import java.security.NoSuchAlgorithmException;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
@@ -20,9 +22,12 @@ import models.Bet;
 import models.Event;
 import models.Results;
 import models.User;
+import models.UserBet;
 
 import org.codehaus.jackson.JsonNode;
 import org.codehaus.jackson.node.ArrayNode;
+import org.json.JSONArray;
+import org.json.JSONException;
 import org.json.JSONObject;
 import org.jsoup.Jsoup;
 import org.jsoup.select.Elements;
@@ -43,6 +48,8 @@ import views.html.index;
 
 import com.avaje.ebean.Ebean;
 import com.avaje.ebean.SqlRow;
+import com.feth.play.module.mail.Mailer;
+import com.feth.play.module.mail.Mailer.Mail.Body;
 import com.notnoop.apns.APNS;
 import com.notnoop.apns.ApnsService;
 
@@ -82,7 +89,7 @@ public class Application extends Controller {
     			event.name = eElement.getAttribute("name");
     			event.eventId = eElement.getAttribute("eventid");
     			String str = eElement.getAttribute("date");
-    			SimpleDateFormat dt = new SimpleDateFormat("yyyymmdd");
+    			SimpleDateFormat dt = new SimpleDateFormat("yyyyMMdd");
     			Calendar cal = Calendar.getInstance();
     			Date date = dt.parse(str);
     			cal.setTime(date);
@@ -101,7 +108,7 @@ public class Application extends Controller {
     			if (node.getNodeType() == Node.ELEMENT_NODE) {
     				Element eElement = (Element) node;
     				String str2 = eElement.getAttribute("bet-start-date");
-        			SimpleDateFormat dt = new SimpleDateFormat("yyyymmdd");
+        			SimpleDateFormat dt = new SimpleDateFormat("yyyyMMdd");
         			Date date2 = dt.parse(str2);
         			Calendar cal2 = Calendar.getInstance();
         			cal2.setTime(date2);
@@ -166,7 +173,6 @@ public class Application extends Controller {
     			Ebean.save(event);
     		}
     	}
-    	//System.out.println(nList.getLength());
     	} catch(Exception e) {
     		e.printStackTrace();
     	}
@@ -434,6 +440,49 @@ public class Application extends Controller {
 			Results res1 = Results.findByDateTimeVenue(res.eventDate,res.eventTime,res.meeting);
 			if(res1 == null && flag == true){
 				res.save();
+				
+				List<UserBet> userBets = UserBet.getUserBetsByEvent(res.eventDate, res.eventTime, res.meeting);
+		    	
+				try {
+					obj = new JSONObject(res.results);
+					JSONArray array = (JSONArray)obj.get("results");
+					
+					for(UserBet userbet: userBets) {
+						
+			    		Bet bet = Bet.findByBetId(userbet.betId);
+			    		
+			    		for(int i=0;i<array.length();i++) {
+			    			
+			    			JSONObject obj2 = (JSONObject)array.get(i);
+			    			
+			    			if(bet.name.equals(obj2.get("name"))) {
+			    				int pos = (Integer)obj2.get("position");
+			    				if(pos == 1) {
+			    					final Body body = new Body("You won for bet: "+bet.name+"    for date and time: "+bet.event.betStartTime+"    venue :"+bet.event.venue);
+							        Mailer.getDefaultMailer().sendMail("Bet result",
+							            body, userbet.user.email);
+			    				}
+			    				if(pos == 2) {
+			    					final Body body = new Body("Your position 2 for bet: "+bet.name+"    for date and time: "+bet.event.betStartTime+"    venue :"+bet.event.venue);
+							        Mailer.getDefaultMailer().sendMail("Bet result",
+							            body, userbet.user.email);
+			    				}
+			    				if(pos == 3) {
+			    					final Body body = new Body("Your position 3 for bet: "+bet.name+"    for date and time: "+bet.event.betStartTime+"    venue :"+bet.event.venue);
+							        Mailer.getDefaultMailer().sendMail("Bet result",
+							            body, userbet.user.email);
+			    				}
+			    			} else {
+			    				final Body body = new Body("You lose for bet: "+bet.name+"    for date and time: "+bet.event.betStartTime+"    venue :"+bet.event.venue);
+						        Mailer.getDefaultMailer().sendMail("Bet result",
+						            body, userbet.user.email);
+			    			}
+			    		}
+			    	}
+				} catch (JSONException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				}
 			}
 		}
 		List<ResultsVM> results = new ArrayList<>();
@@ -482,5 +531,91 @@ public class Application extends Controller {
         return ok();
     }
         
+    public static Result saveBet(String email,String betId) {
+    	
+    	Map<String, String> map = new HashMap<>();
+    	
+    	try {
+    		
+	    	User user = User.findByUserEmail(email);
+	    	Bet bet = Bet.findByBetId(betId);
+	    	
+	    	if(user != null) {
+	    		if(bet != null) {
+	    			UserBet userObj = UserBet.getByUserAndBetId(user, betId);
+	    			if(userObj == null) {
+			    		UserBet userBet = new UserBet();
+			    		userBet.betId = betId;
+			    		userBet.date = bet.event.betStartDate;
+			    		userBet.time = bet.event.betStartTime;
+			    		userBet.venue = bet.event.venue;
+			    		user.userBet.add(userBet);
+			    		user.update();
+	    			} else {
+	    				map.put("210", "Bet already exist for this user!");
+	    				return ok(Json.toJson(map));
+	    			}
+	    		} else {
+	    			map.put("211", "Bet does not exist!");
+	    			return ok(Json.toJson(map));
+	    		}
+	    	} else {
+	    		map.put("211", "User does not exist!");
+	    		return ok(Json.toJson(map));
+	    	}
+	    	
+    	} catch(Exception e) {
+    		map.put("500", e.getMessage());
+    		return ok(Json.toJson(map));
+    	}
+    	map.put("200", "User bet saved successfully!");
+    	return ok(Json.toJson(map));
+    }
+    
+    public static class ChangePasswordForm {
+    	public String email;
+    	public String oldPassword;
+    	public String newPassword;
+    }
+    public static Result changePassword() {
+    	Map<String, String> map = new HashMap<>();
+    	Form<ChangePasswordForm> form = DynamicForm.form(ChangePasswordForm.class).bindFromRequest();
+    	ChangePasswordForm rForm = form.get();
+		if(     rForm.email==null||
+				rForm.email.isEmpty() ||
+				rForm.oldPassword==null ||
+				rForm.oldPassword.isEmpty() ||
+				rForm.newPassword==null ||
+				rForm.newPassword.isEmpty()) {
+			return ok(Json.toJson(new ErrorResponse(Error.E202.getCode(), Error.E202.getMessage())));
+		} else {
+			try {
+				
+					User user = User.getUserByUserNameAndPassword(rForm.email, rForm.oldPassword);
+					if(user != null) {
+						user.password = User.md5Encryption(rForm.newPassword);
+						user.update();
+						final Body body = new Body("your new password is    "+rForm.newPassword);
+				        Mailer.getDefaultMailer().sendMail("Password changed",
+				            body, user.email);
+						map.put("200", "Password changed successfully!");
+			    		return ok(Json.toJson(map));
+					} else {
+						map.put("201", "Invalid user name or password!");
+			    		return ok(Json.toJson(map));
+					}
+					
+			} catch(Exception e) {
+				map.put("500", e.getMessage());
+	    		return ok(Json.toJson(map));
+			}
+		}
+    	
+    }
+    
+    public static void findBetWinner(Date eventDate,Date eventTime,String meeting,String result) throws JSONException {
+    	
+    	
+    }
     
 }
