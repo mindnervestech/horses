@@ -1,8 +1,10 @@
 package controllers;
 
 import java.io.BufferedReader;
+import java.io.File;
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.net.MalformedURLException;
 import java.net.URL;
 import java.security.NoSuchAlgorithmException;
 import java.text.ParseException;
@@ -15,15 +17,24 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
+import javax.xml.bind.JAXBContext;
+import javax.xml.bind.JAXBException;
+import javax.xml.bind.Unmarshaller;
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
 
 import models.Bet;
+import models.Bookmakers;
 import models.Event;
+import models.Races;
 import models.Results;
+import models.Runners;
+import models.Tournament;
 import models.User;
 import models.UserBet;
+import models.WinResults;
 
+import org.apache.commons.io.FileUtils;
 import org.codehaus.jackson.JsonNode;
 import org.codehaus.jackson.node.ArrayNode;
 import org.json.JSONArray;
@@ -43,8 +54,14 @@ import play.libs.Json;
 import play.mvc.Controller;
 import play.mvc.Result;
 import viewmodel.BetVM;
+import viewmodel.BookmakersVM;
 import viewmodel.EventVM;
+import viewmodel.RaceVM;
+import viewmodel.RunnerVM;
+import viewmodel.TournamentVM;
+import viewmodel.WinResultsVM;
 import views.html.index;
+import viewmodel.Scores;
 
 import com.avaje.ebean.Ebean;
 import com.avaje.ebean.SqlRow;
@@ -613,9 +630,249 @@ public class Application extends Controller {
     	
     }
     
-    public static void findBetWinner(Date eventDate,Date eventTime,String meeting,String result) throws JSONException {
+    public static Result getTournamentDetails() throws IOException, ParseException {
+    	try {
+				//URL url = new URL("http://www.goalserve.com/getfeed/21321323aa084872a8edfe9a50ed1ac8/racing/uk");
+		    	File file = new File("racing.xml");
+		    	//FileUtils.copyURLToFile(url, file);
+				JAXBContext jaxbContext = JAXBContext.newInstance(Scores.class);
+				Unmarshaller jaxbUnmarshaller = jaxbContext.createUnmarshaller();
+				Scores scores = (Scores) jaxbUnmarshaller.unmarshal(file);
+				SimpleDateFormat df1 = new SimpleDateFormat("dd.MM.yyyy");
+				for(Scores.Tournament tournament :scores.getTournament()) {
+					Tournament t = new Tournament();
+					t.name = tournament.getName();
+					t.tournamentId = tournament.getId();
+					if(!tournament.getDate().equals("")) {
+						t.date = df1.parse(tournament.getDate());
+					}
+					List<Races> races = new ArrayList<>();
+					SimpleDateFormat df2 = new SimpleDateFormat("dd.MM.yyyy");
+					for(Scores.Tournament.Race race:tournament.getRace()) {
+						Races r = new Races();
+						r.name = race.getName();
+						r.tid = tournament.getId();
+						if(!race.getDatetime().equals("")) {
+							r.dateTime = df2.parse(race.getDatetime());
+						}
+						List<Runners> runner  = new ArrayList<>();
+						List<WinResults> winresults  = new ArrayList<>();
+						for(Scores.Tournament.Race.Runners.Horse horse:race.getRunners().getHorse()) {
+							Runners run = new Runners();
+							run.name = horse.getName();
+							run.raceid = race.getId();
+							run.number = horse.getNumber();
+							run.jockey = horse.getJockey();
+							run.horseId = horse.getId();
+							runner.add(run);
+						}
+						for(Scores.Tournament.Race.Results.Horse rs:race.getResults().getHorse()) {
+							WinResults winres = new WinResults();
+							winres.name = rs.getName();
+							winres.wgt = rs.getWgt();
+							winres.position = rs.getPos();
+							winres.jockey = rs.getJockey();
+							winres.number = rs.getNumber();
+							winres.raceid = race.getId();
+							winresults.add(winres);
+						}
+						r.runners = runner;
+						r.winResults = winresults;
+						races.add(r);
+					}
+						
+					t.races = races;
+					Tournament tnmt = Tournament.getTournament(t.name, t.date, t.tournamentId);
+					if(tnmt == null) {
+						t.save();
+					}
+					
+				}
+				
+				for(Scores.Tournament tournament :scores.getTournament()) {
+					Date d = df1.parse(tournament.getDate());
+					for(Scores.Tournament.Race race:tournament.getRace()) {
+						for(Scores.Tournament.Race.Runners.Horse horse:race.getRunners().getHorse()) {
+							Runners horseObj = Runners.getByHorseId(horse.getId());
+							List<Bookmakers> bookmakersList = new ArrayList<>();
+								for(Scores.Tournament.Race.Odds.Horse hrs : race.getOdds().getHorse()){
+									if(horseObj.horseId.equals(hrs.getId())){
+									for(Scores.Tournament.Race.Odds.Horse.Bookmakers.Bookmaker obj: hrs.getBookmakers().getBookmaker()) {
+										Bookmakers bookmakerObj = new Bookmakers();
+										bookmakerObj.name = obj.getName();
+										bookmakerObj.odd = obj.getOdd();
+										bookmakerObj.bookmakerId = obj.getBookmakerId();
+										bookmakerObj.oddId = obj.getOddId();
+										Bookmakers bk = Bookmakers.getBookmakers(bookmakerObj.name, bookmakerObj.odd, bookmakerObj.oddId, bookmakerObj.bookmakerId, horseObj);
+										if(bk == null){
+											bookmakersList.add(bookmakerObj);
+										}
+									}
+										horseObj.bookmakers = bookmakersList;
+										horseObj.update();
+									}
+					  }
+								
+				 }
+			}			
+						
+		}
+				
+	  } catch (JAXBException e) {
+		e.printStackTrace();
+	  }
+    	return ok();
+    }
+    
+    
+    public static Result getTournament(String date) throws ParseException {
+    	System.out.println("Date ---"+date);
+    	SimpleDateFormat dt = new SimpleDateFormat("yyyy-MM-dd");
+    	Date tournamentDate = dt.parse(date);
+    	Calendar cal = Calendar.getInstance();
+    	cal.setTime(tournamentDate);
+    	cal.set(Calendar.HOUR_OF_DAY,0);
+    	cal.set(Calendar.MINUTE,0);
+    	cal.set(Calendar.SECOND,0);
+    	cal.set(Calendar.MILLISECOND,0);
+
+    	Date d = cal.getTime();
+    	
+    	List<TournamentVM> tournamentresults = new ArrayList<>();
+    	List<Tournament> tList = Tournament.getTournamentByDate(d);
+		for(Tournament tr:tList){
+			TournamentVM tvm = new TournamentVM();
+			tvm.id = tr.id;
+			tvm.name = tr.name;
+			tvm.date = tr.date;
+			tvm.tournamentId = tr.tournamentId;
+			tvm.version = tr.version;
+			tournamentresults.add(tvm);
+		}
+    	
+    	return ok(Json.toJson(tournamentresults));
+    }
+    
+    
+    public static Result getRacesForTournament(String Id) throws ParseException {
+    	/*SimpleDateFormat dt = new SimpleDateFormat("yyyy-MM-dd");
+    	Date tournamentDate = dt.parse(date);
+    	Calendar cal = Calendar.getInstance();
+    	cal.setTime(tournamentDate);
+    	cal.set(Calendar.HOUR_OF_DAY,0);
+    	cal.set(Calendar.MINUTE,0);
+    	cal.set(Calendar.SECOND,0);
+    	cal.set(Calendar.MILLISECOND,0);
+
+    	Date d = cal.getTime();*/
+    	List<Tournament> tList = Tournament.getTournamentById(Id);
+    	//List<Tournament> tList = Tournament.getTournamentByDate(d);
+    	List<RaceVM> raceresults = new ArrayList<>();
+		for(Tournament tr:tList){
+			List<Races> RaceList = Races.getRaceByTId(tr);
+				for(Races rac:RaceList){
+				RaceVM raceVM = new RaceVM();
+				raceVM.id = rac.id;
+				raceVM.name = rac.name;
+				raceVM.dateTime = rac.dateTime;
+				raceVM.tournamentId = rac.tid;
+				raceresults.add(raceVM);
+			}
+		}
     	
     	
+    	return ok(Json.toJson(raceresults));
+    }
+    
+    
+    public static Result getRunnersForRaces(String Id) throws ParseException {
+    	//Races races = Races.getRaceById(Id);
+    	List<Runners> runnerList = Runners.getByRunnerById(Id);
+    	List<RunnerVM> runnerresults = new ArrayList<>();
+		for(Runners run:runnerList){
+			RunnerVM rn = new RunnerVM();
+			rn.id = run.id;
+			rn.name = run.name;
+			rn.jockey = run.jockey;
+			rn.horseId = run.horseId;
+			List<Bookmakers> bookmakerList = Bookmakers.getBookmakersByRunnerId(run);
+				for(Bookmakers bookm:bookmakerList){
+				BookmakersVM bookVM = new BookmakersVM();
+				bookVM.id = bookm.id;
+				bookVM.name = bookm.name;
+				bookVM.odd = bookm.odd;
+				bookVM.oddId = bookm.oddId;
+				bookVM.bookmakerId = bookm.bookmakerId;
+				
+				rn.bookmakersVM.add(bookVM);
+			}
+			runnerresults.add(rn);	
+		}
+		
+    	
+    	
+    	return ok(Json.toJson(runnerresults));
+    }
+    
+    
+    
+    public static Result getWinResultByDate(String date) throws ParseException {
+    	System.out.println("Date ---"+date);
+    	SimpleDateFormat dt = new SimpleDateFormat("yyyy-MM-dd");
+    	Date raceDate = dt.parse(date);
+    	Calendar cal = Calendar.getInstance();
+    	cal.setTime(raceDate);
+    	cal.set(Calendar.HOUR_OF_DAY,0);
+    	cal.set(Calendar.MINUTE,0);
+    	cal.set(Calendar.SECOND,0);
+    	cal.set(Calendar.MILLISECOND,0);
+
+    	Date d = cal.getTime();
+    	List<Races> races = Races.getRaceByDate(d);
+    	List<RaceVM> winrs = new ArrayList<>();
+		for(Races rs:races){
+			RaceVM rc = new RaceVM();
+			rc.id = rs.id;
+			rc.name = rs.name;
+			rc.tournamentName = rs.tournament.name;
+			List<WinResults> winResults = WinResults.getresulttById(rs.id);
+				for(WinResults win:winResults){
+				WinResultsVM winResultsVM = new WinResultsVM();
+				winResultsVM.id = win.id;
+				winResultsVM.name = win.name;
+				winResultsVM.jockey = win.jockey;
+				winResultsVM.position = win.position;
+				winResultsVM.number = win.number;
+				winResultsVM.wgt = win.wgt;
+				winResultsVM.raceid = win.raceid;
+				
+				rc.winResultsVMs.add(winResultsVM);
+			}
+			winrs.add(rc);	
+		}
+    	return ok(Json.toJson(winrs));
+    }
+    
+    
+    public static Result getWinResultById(String id) throws ParseException {
+    	List<WinResultsVM> winrs = new ArrayList<>();
+			List<WinResults> winResults = WinResults.getresulttByRaceId(id);
+				for(WinResults win:winResults){
+				WinResultsVM winResultsVM = new WinResultsVM();
+				winResultsVM.id = win.id;
+				winResultsVM.name = win.name;
+				winResultsVM.jockey = win.jockey;
+				winResultsVM.position = win.position;
+				winResultsVM.number = win.number;
+				winResultsVM.wgt = win.wgt;
+				winResultsVM.raceid = win.raceid;
+				
+				winrs.add(winResultsVM);
+			}
+		
+    	
+    	
+    	return ok(Json.toJson(winrs));
     }
     
 }

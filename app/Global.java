@@ -41,6 +41,19 @@ public class Global extends GlobalSettings {
 						}
 					}
 				}, getResults.dispatcher());
+		
+		getLiveGame.scheduler().schedule(
+				Duration.create(1000, TimeUnit.MILLISECONDS),
+				Duration.create(5, TimeUnit.MINUTES), new Runnable() {
+					public void run() {
+						try {
+							controllers.Application.getTournamentDetails();
+						} catch (Exception e) {
+							e.printStackTrace();
+						}
+					}
+				}, getLiveGame.dispatcher());
+		
 	}
 	
 	@Override

@@ -18,3 +18,13 @@ POST	/changePassword				controllers.Application.changePassword()
 GET     /assets/*file               controllers.Assets.at(path="/public", file)
 
 GET		/getResults					controllers.Application.getResults()
+
+GET		/getTournament/:date					controllers.Application.getTournament(date: String)
+
+GET		/getRacesForTournament/:tId					controllers.Application.getRacesForTournament(tId: String)
+
+GET		/getRunnersForRaces/:raceId					controllers.Application.getRunnersForRaces(raceId: String)
+
+GET		/getWinResultByDate/:date					controllers.Application.getWinResultByDate(date: String)
+
+GET		/getWinResultById/:raceId					controllers.Application.getWinResultById(raceId: String)
