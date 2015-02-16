@@ -34,7 +34,7 @@ import models.User;
 import models.UserBet;
 import models.WinResults;
 
-
+import org.apache.commons.io.FileUtils;
 import org.codehaus.jackson.JsonNode;
 import org.codehaus.jackson.node.ArrayNode;
 import org.json.JSONArray;
@@ -263,6 +263,10 @@ public class Application extends Controller {
     	try{
     		Form<RegisterForm> form = DynamicForm.form(RegisterForm.class).bindFromRequest();
     		RegisterForm rForm = form.get();
+    		rForm.firstName = form.data().get("firstName");
+    		rForm.lastName = form.data().get("lastName");
+    		rForm.email = form.data().get("email");
+    		rForm.password = form.data().get("password");
     		if(     rForm.firstName.isEmpty()||
     				rForm.firstName==null||
 					rForm.lastName.isEmpty()||
@@ -598,6 +602,9 @@ public class Application extends Controller {
     	Map<String, String> map = new HashMap<>();
     	Form<ChangePasswordForm> form = DynamicForm.form(ChangePasswordForm.class).bindFromRequest();
     	ChangePasswordForm rForm = form.get();
+    	rForm.email = form.data().get("email");
+    	rForm.oldPassword = form.data().get("oldPassword");
+    	rForm.newPassword = form.data().get("newPassword");
 		if(     rForm.email==null||
 				rForm.email.isEmpty() ||
 				rForm.oldPassword==null ||
@@ -632,12 +639,12 @@ public class Application extends Controller {
     
     public static Result getTournamentDetails() throws IOException, ParseException {
     	try {
-				//URL url = new URL("http://www.goalserve.com/getfeed/21321323aa084872a8edfe9a50ed1ac8/racing/uk");
-		    	File file = new File("racing.xml");
+				URL url = new URL("http://www.goalserve.com/getfeed/21321323aa084872a8edfe9a50ed1ac8/racing/uk");
+		    	//File file = new File("racing.xml");
 		    	//FileUtils.copyURLToFile(url, file);
 				JAXBContext jaxbContext = JAXBContext.newInstance(Scores.class);
 				Unmarshaller jaxbUnmarshaller = jaxbContext.createUnmarshaller();
-				Scores scores = (Scores) jaxbUnmarshaller.unmarshal(file);
+				Scores scores = (Scores) jaxbUnmarshaller.unmarshal(url);
 				SimpleDateFormat df1 = new SimpleDateFormat("dd.MM.yyyy");
 				for(Scores.Tournament tournament :scores.getTournament()) {
 					Tournament t = new Tournament();
