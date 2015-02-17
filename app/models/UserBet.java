@@ -17,19 +17,22 @@ public class UserBet extends Model {
 	public Long id;
 	@ManyToOne
 	public User user;
-	public String betId;
-	public Date time;
-	public Date date;
-	public String venue;
+	public String raceId;
+	public String horseId;
+	
 	
 	
 	public static Finder<Long,UserBet> find = new Finder<>(Long.class,UserBet.class);
 	
-	public static UserBet getByUserAndBetId(User user,String betId) {
-		return find.where().eq("user", user).eq("betId", betId).findUnique();
+	public static UserBet getByUserAndBetId(User user,String raceId) {
+		return find.where().eq("user", user).eq("raceId", raceId).findUnique();
 	}
 	
-	public static List<UserBet> getUserBetsByEvent(Date eventDate,Date eventTime,String venue) {
+	/*public static List<UserBet> getUserBetsByEvent(Date eventDate,Date eventTime,String venue) {
 		return find.where().eq("date", eventDate).eq("time", eventTime).eq("venue", venue).findList();
+	}*/
+	
+	public static List<UserBet> getUserBetByRaceId(String raceId) {
+		return find.where().eq("raceId", raceId).findList();
 	}
 }

@@ -25,6 +25,8 @@ public class WinResults extends Model{
 	public String wgt;
 	public String jockey;
 	public String raceid;
+	public String horseid;
+	public Boolean flag;
 	
 	@Version
     public java.util.Date version;
@@ -33,6 +35,10 @@ public class WinResults extends Model{
 
 	public static List<WinResults> getresulttById(Long id) {
 		return find.where().eq("id", id).findList();
+	}
+	
+	public static List<WinResults> getAllWinResult() {
+		return find.where().eq("flag", false).findList();
 	}
 	
 	public static List<WinResults> getresulttByRaceId(String raceid) {

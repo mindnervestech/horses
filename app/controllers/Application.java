@@ -390,7 +390,46 @@ public class Application extends Controller {
     	}
     }
     
-    public static Result getResults() throws ParseException{
+    public static Result getResults() {
+    	Map<String, String> map = new HashMap<>();
+    	List<WinResults> win = WinResults.getAllWinResult();
+    	
+    	for(WinResults winres: win) {
+    		List<UserBet> uBet = UserBet.getUserBetByRaceId(winres.raceid);
+    		for(UserBet userbet: uBet) {
+    			if(userbet.raceId.equals(winres.raceid) && userbet.horseId.equals(winres.horseid)) {
+    				String pos = winres.position;
+    				if(pos.equals("1")) {
+    					final Body body = new Body("You won for bet: "+winres.name+"for date and time: "+winres.version);
+				        Mailer.getDefaultMailer().sendMail("Bet result",
+				            body, userbet.user.email);
+    				}
+    				if(pos.equals("2")) {
+    					final Body body = new Body("Your position 2 for bet: "+winres.name+"    for date and time: "+winres.version);
+				        Mailer.getDefaultMailer().sendMail("Bet result",
+				            body, userbet.user.email);
+    				}
+    				if(pos.equals("3")) {
+    					final Body body = new Body("Your position 3 for bet: "+winres.name+"    for date and time: "+winres.version);
+				        Mailer.getDefaultMailer().sendMail("Bet result",
+				            body, userbet.user.email);
+    				}
+    			} else {
+    				final Body body = new Body("You lose for bet: "+winres.name+"    for date and time: "+winres.version);
+			        Mailer.getDefaultMailer().sendMail("Bet result",
+			            body, userbet.user.email);
+    			}
+    		}
+    		winres.flag = true;
+    		winres.update();
+    	}
+    	
+			map.put("200", "USER WON RESULT");
+			return ok(Json.toJson(map));
+		
+    }
+    
+   /* public static Result getResults() throws ParseException{
     	org.jsoup.nodes.Document doc = null;
 		try {
 			doc = Jsoup.connect("http://betfred.chromaagency.com/results").get();
@@ -462,7 +501,7 @@ public class Application extends Controller {
 			if(res1 == null && flag == true){
 				res.save();
 				
-				List<UserBet> userBets = UserBet.getUserBetsByEvent(res.eventDate, res.eventTime, res.meeting);
+				List<UserBet> userBets = UserBet.getUserBetByRaceId(raceId)
 		    	
 				try {
 					obj = new JSONObject(res.results);
@@ -470,7 +509,7 @@ public class Application extends Controller {
 					
 					for(UserBet userbet: userBets) {
 						
-			    		Bet bet = Bet.findByBetId(userbet.betId);
+			    		Bet bet = Bet.findByBetId(userbet.raceId);
 			    		
 			    		for(int i=0;i<array.length();i++) {
 			    			
@@ -535,7 +574,7 @@ public class Application extends Controller {
 			return ok("No matches today.");
 		}
     	return ok(Json.toJson(results));
-    }
+    }*/
     
     public static Result sendPushNotification(String deviceToken, String msg) {
         System.out.println("sendPushNotification " + lCertificate);
@@ -552,43 +591,32 @@ public class Application extends Controller {
         return ok();
     }
         
-    public static Result saveBet(String email,String betId) {
+    public static Result saveBet() {
     	
     	Map<String, String> map = new HashMap<>();
     	
-    	try {
-    		
-	    	User user = User.findByUserEmail(email);
-	    	Bet bet = Bet.findByBetId(betId);
-	    	
-	    	if(user != null) {
-	    		if(bet != null) {
-	    			UserBet userObj = UserBet.getByUserAndBetId(user, betId);
-	    			if(userObj == null) {
-			    		UserBet userBet = new UserBet();
-			    		userBet.betId = betId;
-			    		userBet.date = bet.event.betStartDate;
-			    		userBet.time = bet.event.betStartTime;
-			    		userBet.venue = bet.event.venue;
-			    		user.userBet.add(userBet);
-			    		user.update();
-	    			} else {
-	    				map.put("210", "Bet already exist for this user!");
-	    				return ok(Json.toJson(map));
-	    			}
-	    		} else {
-	    			map.put("211", "Bet does not exist!");
-	    			return ok(Json.toJson(map));
-	    		}
-	    	} else {
-	    		map.put("211", "User does not exist!");
-	    		return ok(Json.toJson(map));
-	    	}
-	    	
-    	} catch(Exception e) {
-    		map.put("500", e.getMessage());
-    		return ok(Json.toJson(map));
-    	}
+    	JsonNode json = request().body().asJson();
+        System.out.println("bets === "+json);
+        String email = json.path("email").asText();
+    	System.out.println("bet email == "+email);
+    	JsonNode bets = json.path("bets");
+    	 ArrayNode items = (ArrayNode) bets;
+    	 System.out.println("bets == "+bets);
+        User user = User.findByUserEmail(email);
+        for(int i=0;i<items.size();i++){
+        	if(user != null) {
+	    		UserBet userBet = new UserBet();
+	    		 JsonNode node = items.get(i);
+	    		userBet.user = user;
+	    		userBet.horseId = node.path("horseid").asText();
+	    		userBet.raceId = node.path("raceid").asText();
+	    		user.userBet.add(userBet);
+	    		user.update();
+			} else {
+				map.put("210", "User Not Exit!");
+				return ok(Json.toJson(map));
+			}
+        }
     	map.put("200", "User bet saved successfully!");
     	return ok(Json.toJson(map));
     }
@@ -602,9 +630,6 @@ public class Application extends Controller {
     	Map<String, String> map = new HashMap<>();
     	Form<ChangePasswordForm> form = DynamicForm.form(ChangePasswordForm.class).bindFromRequest();
     	ChangePasswordForm rForm = form.get();
-    	rForm.email = form.data().get("email");
-    	rForm.oldPassword = form.data().get("oldPassword");
-    	rForm.newPassword = form.data().get("newPassword");
 		if(     rForm.email==null||
 				rForm.email.isEmpty() ||
 				rForm.oldPassword==null ||
@@ -637,6 +662,40 @@ public class Application extends Controller {
     	
     }
     
+    public static Result forgotPassword() {
+    	Map<String, String> map = new HashMap<>();
+    	Form<ChangePasswordForm> form = DynamicForm.form(ChangePasswordForm.class).bindFromRequest();
+    	ChangePasswordForm rForm = form.get();
+		if(     rForm.email==null||
+				rForm.email.isEmpty()) {
+			return ok(Json.toJson(new ErrorResponse(Error.E202.getCode(), Error.E202.getMessage())));
+		} else {
+			try {
+				
+					User user = User.findByUserEmail(rForm.email);
+					if(user != null) {
+						user.password = User.md5Encryption("testing123");
+						user.update();
+						final Body body = new Body("your new password is  :  "+"testing123");
+				        Mailer.getDefaultMailer().sendMail("New Password",
+				            body, user.email);
+						map.put("200", " Generate New Password !");
+			    		return ok(Json.toJson(map));
+					} else {
+						map.put("201", "Invalid user name!");
+			    		return ok(Json.toJson(map));
+					}
+					
+			} catch(Exception e) {
+				map.put("500", e.getMessage());
+	    		return ok(Json.toJson(map));
+			}
+		}
+    	
+    }
+    
+    
+    
     public static Result getTournamentDetails() throws IOException, ParseException {
     	try {
 				URL url = new URL("http://www.goalserve.com/getfeed/21321323aa084872a8edfe9a50ed1ac8/racing/uk");
@@ -659,6 +718,7 @@ public class Application extends Controller {
 						Races r = new Races();
 						r.name = race.getName();
 						r.tid = tournament.getId();
+						r.raceid = race.getId();
 						if(!race.getDatetime().equals("")) {
 							r.dateTime = df2.parse(race.getDatetime());
 						}
@@ -681,6 +741,8 @@ public class Application extends Controller {
 							winres.jockey = rs.getJockey();
 							winres.number = rs.getNumber();
 							winres.raceid = race.getId();
+							winres.horseid = rs.getId();
+							winres.flag = false;
 							winresults.add(winres);
 						}
 						r.runners = runner;

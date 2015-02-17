@@ -21,6 +21,7 @@ public class Races extends Model {
 	public String name;
 	public Date dateTime;
 	public String tid;
+	public String raceid;
 	@ManyToOne
 	public Tournament tournament;
 	@OneToMany(cascade=CascadeType.ALL)
@@ -38,6 +39,10 @@ public class Races extends Model {
 	
 	public static List<Races> getRaceByTourId(String tid) {
 		return find.where().eq("tid", tid).findList();
+	}
+	
+	public static Races getRaceByraceId(String raceid) {
+		return find.where().eq("raceid", raceid).findUnique();
 	}
 	
 	public static Races getRaceById(Long id) {
