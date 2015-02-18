@@ -296,6 +296,27 @@ public class Application extends Controller {
     	}
     }
     
+    
+    public static Result saveDeviceToken() {
+    	
+    	Map<String, String> map = new HashMap<>();
+    	
+    	JsonNode json = request().body().asJson();
+        String email = json.path("email").asText();
+    	String token = json.path("token").asText();
+    	
+    	User user = User.findByUserEmail(email);
+    	if(user != null){
+    		user.idevice = token;
+    		user.update();
+    	}else{
+    		map.put("201", "User Does Not Exit! ");
+    		return ok(Json.toJson(map));
+    	}
+    	map.put("200", "IDEVICE Token save successfully! ");
+		return ok(Json.toJson(map));
+    }
+    
     public static class RegisterForm {
     	public String firstName;
     	public String lastName;
@@ -396,6 +417,7 @@ public class Application extends Controller {
     	
     	for(WinResults winres: win) {
     		List<UserBet> uBet = UserBet.getUserBetByRaceId(winres.raceid);
+    		Races races = Races.getRaceByraceId(winres.raceid);
     		for(UserBet userbet: uBet) {
     			if(userbet.raceId.equals(winres.raceid) && userbet.horseId.equals(winres.horseid)) {
     				String pos = winres.position;
@@ -418,6 +440,11 @@ public class Application extends Controller {
     				final Body body = new Body("You lose for bet: "+winres.name+"    for date and time: "+winres.version);
 			        Mailer.getDefaultMailer().sendMail("Bet result",
 			            body, userbet.user.email);
+    			}
+    			String token = userbet.user.idevice;
+    			if(token != null){
+    				String msg = "Bet Name :"+winres.name+"Race Name :"+races.name+"Horse Name : "+winres.name;
+    				sendPushNotification(token,msg);
     			}
     		}
     		winres.flag = true;

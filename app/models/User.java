@@ -21,6 +21,7 @@ public class User extends Model {
 	public String lastName;
 	public String password;
 	public String email;
+	public String idevice;
 	
 	@OneToMany(cascade=CascadeType.ALL)
 	public List<UserBet> userBet;
