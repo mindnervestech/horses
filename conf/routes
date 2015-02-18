@@ -11,8 +11,10 @@ GET		/getGameByVenueAndDate/:venue/:date		controllers.Application.getGameByVenue
 GET		/getHorsesForGameID/:eventId				controllers.Application.getHorsesForGameID(eventId: String)
 POST 	/register					controllers.Application.register()
 POST    /login                      controllers.Application.login()
-GET		/saveBet/:email/:betId		controllers.Application.saveBet(email: String,betId: String)
+POST	/saveBet					controllers.Application.saveBet()
 POST	/changePassword				controllers.Application.changePassword()
+POST	/forgotPassword				controllers.Application.forgotPassword()
+POST    /saveDeviceToken			controllers.Application.saveDeviceToken()
 
 # Map static resources from the /public folder to the /assets URL path
 GET     /assets/*file               controllers.Assets.at(path="/public", file)
