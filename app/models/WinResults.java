@@ -45,4 +45,10 @@ public class WinResults extends Model{
 		return find.where().eq("raceid", raceid).findList();
 	}
 
+	public static WinResults getresulttByRaceIdHorseId(String raceid,
+			String horseid) {
+		return find.where().eq("raceid", raceid).eq("horseid", horseid).findUnique();
+	}
+	
+
 }

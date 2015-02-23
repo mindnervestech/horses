@@ -971,9 +971,40 @@ public class Application extends Controller {
 				
 				winrs.add(winResultsVM);
 			}
-		
+    	return ok(Json.toJson(winrs));
+    }
+    
+    
+    public static Result BetResultByUser() {
     	
-    	
+    	JsonNode json = request().body().asJson();
+	        String email = json.path("email").asText();
+	        User user = User.findByUserEmail(email);
+	        List<RaceVM> winrs = new ArrayList<>();
+	        List<UserBet> userBet = UserBet.getUserBetsByUser(user);
+	        for(UserBet ub:userBet){
+	        	List<Races> races = Races.getRaceListByraceId(ub.raceId);
+	    		for(Races rs:races){
+					RaceVM rc = new RaceVM();
+					rc.raceId = rs.raceid;
+					rc.name = rs.name;
+					if(ub.raceId != null && ub.horseId != null){
+						WinResults win = WinResults.getresulttByRaceIdHorseId(ub.raceId,ub.horseId);
+						WinResultsVM winResultsVM = new WinResultsVM();
+						winResultsVM.id = win.id;
+						winResultsVM.name = win.name;
+						winResultsVM.jockey = win.jockey;
+						winResultsVM.position = win.position;
+						winResultsVM.number = win.number;
+						winResultsVM.wgt = win.wgt;
+						winResultsVM.raceid = win.raceid;
+						rc.winResultsVMs.add(winResultsVM);
+	    		}
+				winrs.add(rc);			
+	        }
+	    	
+	      }  
+	        
     	return ok(Json.toJson(winrs));
     }
     

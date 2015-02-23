@@ -28,9 +28,9 @@ public class UserBet extends Model {
 		return find.where().eq("user", user).eq("raceId", raceId).findUnique();
 	}
 	
-	/*public static List<UserBet> getUserBetsByEvent(Date eventDate,Date eventTime,String venue) {
-		return find.where().eq("date", eventDate).eq("time", eventTime).eq("venue", venue).findList();
-	}*/
+	public static List<UserBet> getUserBetsByUser(User user) {
+		return find.where().eq("user", user).findList();
+	}
 	
 	public static List<UserBet> getUserBetByRaceId(String raceId) {
 		return find.where().eq("raceId", raceId).findList();

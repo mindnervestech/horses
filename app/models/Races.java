@@ -45,6 +45,10 @@ public class Races extends Model {
 		return find.where().eq("raceid", raceid).findUnique();
 	}
 	
+	public static List<Races> getRaceListByraceId(String raceid) {
+		return find.where().eq("raceid", raceid).findList();
+	}
+	
 	public static Races getRaceById(Long id) {
 		return find.where().eq("id", id).findUnique();
 	}
