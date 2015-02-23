@@ -21,6 +21,7 @@ public class RaceVM {
 	public String name;
 	public Date dateTime;
 	public String tournamentId;
+	public String raceId;
 	public String tournamentName;
 	public List<WinResultsVM> winResultsVMs = new ArrayList<WinResultsVM>();
 }

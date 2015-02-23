@@ -1,5 +1,6 @@
 package viewmodel;
 
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 
@@ -14,4 +15,5 @@ public class TournamentVM {
 	public String tournamentId;
 	public List<Races> races;
     public java.util.Date version;
+    public List<RaceVM> allRaces = new ArrayList<RaceVM>();
 }

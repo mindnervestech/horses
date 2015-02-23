@@ -924,28 +924,34 @@ public class Application extends Controller {
     	cal.set(Calendar.MILLISECOND,0);
 
     	Date d = cal.getTime();
-    	List<Races> races = Races.getRaceByDate(d);
-    	List<RaceVM> winrs = new ArrayList<>();
-		for(Races rs:races){
-			RaceVM rc = new RaceVM();
-			rc.id = rs.id;
-			rc.name = rs.name;
-			rc.tournamentName = rs.tournament.name;
-			List<WinResults> winResults = WinResults.getresulttById(rs.id);
-				for(WinResults win:winResults){
-				WinResultsVM winResultsVM = new WinResultsVM();
-				winResultsVM.id = win.id;
-				winResultsVM.name = win.name;
-				winResultsVM.jockey = win.jockey;
-				winResultsVM.position = win.position;
-				winResultsVM.number = win.number;
-				winResultsVM.wgt = win.wgt;
-				winResultsVM.raceid = win.raceid;
+    	List<TournamentVM> winrs = new ArrayList<>();
+    	List<Tournament> tournaments = Tournament.getTournamentByDate(d);
+    	for(Tournament trn:tournaments){
+    		TournamentVM tr = new TournamentVM();
+    		tr.name = trn.name;
+    		tr.tournamentId = trn.tournamentId;
+    		List<Races> races = Races.getRaceByTourId(trn.tournamentId);
+    		for(Races rs:races){
+				RaceVM rc = new RaceVM();
+				rc.raceId = rs.raceid;
+				rc.name = rs.name;
+				List<WinResults> winResults = WinResults.getresulttByRaceId(rc.raceId);
+					for(WinResults win:winResults){
+					WinResultsVM winResultsVM = new WinResultsVM();
+					winResultsVM.id = win.id;
+					winResultsVM.name = win.name;
+					winResultsVM.jockey = win.jockey;
+					winResultsVM.position = win.position;
+					winResultsVM.number = win.number;
+					winResultsVM.wgt = win.wgt;
+					winResultsVM.raceid = win.raceid;
+					rc.winResultsVMs.add(winResultsVM);
+				}
+				tr.allRaces.add(rc);	
 				
-				rc.winResultsVMs.add(winResultsVM);
-			}
-			winrs.add(rc);	
-		}
+    		}
+    		winrs.add(tr);
+    }	
     	return ok(Json.toJson(winrs));
     }
     
