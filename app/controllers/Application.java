@@ -789,7 +789,7 @@ public class Application extends Controller {
 					Date d = df1.parse(tournament.getDate());
 					for(Scores.Tournament.Race race:tournament.getRace()) {
 						for(Scores.Tournament.Race.Runners.Horse horse:race.getRunners().getHorse()) {
-							Runners horseObj = Runners.getByHorseId(horse.getId());
+							Runners horseObj = Runners.getByHorseId(horse.getId(),race.getId());
 							List<Bookmakers> bookmakersList = new ArrayList<>();
 								for(Scores.Tournament.Race.Odds.Horse hrs : race.getOdds().getHorse()){
 									if(horseObj.horseId.equals(hrs.getId())){

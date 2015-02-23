@@ -32,8 +32,8 @@ public class Runners extends Model {
 	
 	public static Finder<Long,Runners> find = new Finder<>(Long.class,Runners.class);
 	
-	public static Runners getByHorseId(String id) {
-		return find.where().eq("horseId", id).findUnique();
+	public static Runners getByHorseId(String id,String raceid) {
+		return find.where().eq("horseId", id).eq("raceid", raceid).findUnique();
 	}
 	
 	public static List<Runners> getByRunnerById(String raceid) {
