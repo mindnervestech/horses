@@ -32,6 +32,7 @@ import models.Runners;
 import models.Tournament;
 import models.User;
 import models.UserBet;
+import models.UserBetDetails;
 import models.WinResults;
 
 
@@ -60,6 +61,7 @@ import viewmodel.RaceVM;
 import viewmodel.RunnerVM;
 import viewmodel.TournamentVM;
 import viewmodel.WinResultsVM;
+import viewmodel.saveBetVM;
 import views.html.index;
 import viewmodel.Scores;
 
@@ -412,7 +414,7 @@ public class Application extends Controller {
     }
     
     public static Result getResults() {
-    	Map<String, String> map = new HashMap<>();
+    	/*Map<String, String> map = new HashMap<>();
     	List<WinResults> win = WinResults.getAllWinResult();
     	
     	for(WinResults winres: win) {
@@ -451,8 +453,8 @@ public class Application extends Controller {
     		winres.update();
     	}
     	
-			map.put("200", "USER WON RESULT");
-			return ok(Json.toJson(map));
+			map.put("200", "USER WON RESULT");*/
+			return ok();
 		
     }
     
@@ -626,25 +628,35 @@ public class Application extends Controller {
         System.out.println("bets === "+json);
         String email = json.path("email").asText();
     	System.out.println("bet email == "+email);
+    	 String betname = json.path("betname").asText();
+     	System.out.println("bet email == "+betname);
+     	String raceid = json.path("raceid").asText();
+     	System.out.println("bet email == "+raceid);
     	JsonNode bets = json.path("bets");
     	 ArrayNode items = (ArrayNode) bets;
     	 System.out.println("bets == "+bets);
         User user = User.findByUserEmail(email);
+        UserBet userBet = new UserBet();
+		userBet.user = user;
+		userBet.raceId = raceid;
+		userBet.betName = betname;
+		userBet.save();
         for(int i=0;i<items.size();i++){
         	if(user != null) {
-	    		UserBet userBet = new UserBet();
-	    		 JsonNode node = items.get(i);
-	    		userBet.user = user;
-	    		userBet.horseId = node.path("horseid").asText();
-	    		userBet.raceId = node.path("raceid").asText();
-	    		userBet.betName = node.path("betname").asText();
-	    		user.userBet.add(userBet);
-	    		user.update();
+	    		UserBetDetails userBetDetails = new UserBetDetails();
+	    		JsonNode node = items.get(i);
+	    		userBetDetails.userBet = userBet;
+	    		userBetDetails.horseId = node.path("horseid").asText();
+	    		userBetDetails.save();
+	    		
 			} else {
 				map.put("210", "User Not Exit!");
 				return ok(Json.toJson(map));
 			}
+        	
         }
+        user.userBet.add(userBet);
+		user.update();
     	map.put("200", "User bet saved successfully!");
     	return ok(Json.toJson(map));
     }
@@ -938,32 +950,21 @@ public class Application extends Controller {
 				rc.name = rs.name;
 				List<WinResults> winResults = WinResults.getresulttByRaceId(rc.raceId);
 				if(winResults.size() > 0){	
-				for(WinResults win:winResults){
-					WinResultsVM winResultsVM = new WinResultsVM();
-					winResultsVM.id = win.id;
-					winResultsVM.name = win.name;
-					winResultsVM.jockey = win.jockey;
-					winResultsVM.position = win.position;
-					winResultsVM.number = win.number;
-					winResultsVM.wgt = win.wgt;
-					winResultsVM.raceid = win.raceid;
-					rc.winResultsVMs.add(winResultsVM);
-				}
-				}else{
-					Calendar cal1 = Calendar.getInstance();
-					cal1.setTime(d);
-			    	cal1.set(Calendar.HOUR_OF_DAY,0);
-			    	cal1.set(Calendar.MINUTE,0);
-			    	cal1.set(Calendar.SECOND,0);
-			    	cal1.set(Calendar.MILLISECOND,0);
-					cal1.add(Calendar.DAY_OF_YEAR, -1);
-					Date previousDate = cal1.getTime();
-					String previousDatestring = dt.format(previousDate); 
-					getWinResultByDate(previousDatestring);
-					return getWinResultByDate(previousDatestring);
+					for(WinResults win:winResults){
+						WinResultsVM winResultsVM = new WinResultsVM();
+						winResultsVM.id = win.id;
+						winResultsVM.name = win.name;
+						winResultsVM.jockey = win.jockey;
+						winResultsVM.position = win.position;
+						winResultsVM.number = win.number;
+						winResultsVM.wgt = win.wgt;
+						winResultsVM.raceid = win.raceid;
+						rc.winResultsVMs.add(winResultsVM);
+					}
+					tr.allRaces.add(rc);
 				}
 	
-				tr.allRaces.add(rc);	
+					
 				
     		}
     		winrs.add(tr);
@@ -995,17 +996,21 @@ public class Application extends Controller {
     	JsonNode json = request().body().asJson();
 	        String email = json.path("email").asText();
 	        User user = User.findByUserEmail(email);
-	        List<RaceVM> winrs = new ArrayList<>();
-	        List<UserBet> userBet = UserBet.getUserBetsByUser(user);
-	        for(UserBet ub:userBet){
-	        	List<Races> races = Races.getRaceListByraceId(ub.raceId);
-	    		for(Races rs:races){
+	        List<saveBetVM> winrs = new ArrayList<>();
+	        UserBet userBet = UserBet.getUserBetsByUser(user);
+	        //for(UserBet ub:userBet){
+	        	saveBetVM saveBetVM = new saveBetVM();
+	        	saveBetVM.name = userBet.betName;
+	        	Races races = Races.getRaceListByraceId(userBet.raceId);
+	    		//for(Races rs:races){
 					RaceVM rc = new RaceVM();
-					rc.raceId = rs.raceid;
-					rc.name = rs.name;
-					if(ub.raceId != null && ub.horseId != null){
-						WinResults win = WinResults.getresulttByRaceIdHorseId(ub.raceId,ub.horseId);
-						if(win != null) {
+					rc.raceId = races.raceid;
+					rc.name = races.name;
+					if(userBet.raceId != null){
+						List<UserBetDetails> ued = UserBetDetails.getByUserAndBetId(userBet);
+						for(UserBetDetails rs:ued){
+						WinResults win = WinResults.getresulttByRaceIdHorseId(userBet.raceId,rs.horseId);
+						if(win != null){
 						WinResultsVM winResultsVM = new WinResultsVM();
 						winResultsVM.id = win.id;
 						winResultsVM.name = win.name;
@@ -1015,12 +1020,14 @@ public class Application extends Controller {
 						winResultsVM.wgt = win.wgt;
 						winResultsVM.raceid = win.raceid;
 						rc.winResultsVMs.add(winResultsVM);
-                                                }
+						}	
 	    		}
-				winrs.add(rc);			
-	        }
-	    	
-	      }  
+			}			
+				saveBetVM.allRaces.add(rc);
+					//winrs.add(rc);			
+	        //}
+	    		winrs.add(saveBetVM);
+	     // }  
 	        
     	return ok(Json.toJson(winrs));
     }
