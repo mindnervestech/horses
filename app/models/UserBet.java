@@ -19,8 +19,7 @@ public class UserBet extends Model {
 	public User user;
 	public String raceId;
 	public String horseId;
-	
-	
+	public String betName;
 	
 	public static Finder<Long,UserBet> find = new Finder<>(Long.class,UserBet.class);
 	

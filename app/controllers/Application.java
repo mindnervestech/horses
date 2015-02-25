@@ -637,6 +637,7 @@ public class Application extends Controller {
 	    		userBet.user = user;
 	    		userBet.horseId = node.path("horseid").asText();
 	    		userBet.raceId = node.path("raceid").asText();
+	    		userBet.betName = node.path("betname").asText();
 	    		user.userBet.add(userBet);
 	    		user.update();
 			} else {
@@ -936,7 +937,8 @@ public class Application extends Controller {
 				rc.raceId = rs.raceid;
 				rc.name = rs.name;
 				List<WinResults> winResults = WinResults.getresulttByRaceId(rc.raceId);
-					for(WinResults win:winResults){
+				if(winResults.size() > 0){	
+				for(WinResults win:winResults){
 					WinResultsVM winResultsVM = new WinResultsVM();
 					winResultsVM.id = win.id;
 					winResultsVM.name = win.name;
@@ -947,6 +949,20 @@ public class Application extends Controller {
 					winResultsVM.raceid = win.raceid;
 					rc.winResultsVMs.add(winResultsVM);
 				}
+				}else{
+					Calendar cal1 = Calendar.getInstance();
+					cal1.setTime(d);
+			    	cal1.set(Calendar.HOUR_OF_DAY,0);
+			    	cal1.set(Calendar.MINUTE,0);
+			    	cal1.set(Calendar.SECOND,0);
+			    	cal1.set(Calendar.MILLISECOND,0);
+					cal1.add(Calendar.DAY_OF_YEAR, -1);
+					Date previousDate = cal1.getTime();
+					String previousDatestring = dt.format(previousDate); 
+					getWinResultByDate(previousDatestring);
+					return getWinResultByDate(previousDatestring);
+				}
+	
 				tr.allRaces.add(rc);	
 				
     		}
@@ -954,7 +970,6 @@ public class Application extends Controller {
     }	
     	return ok(Json.toJson(winrs));
     }
-    
     
     public static Result getWinResultById(String id) throws ParseException {
     	List<WinResultsVM> winrs = new ArrayList<>();
