@@ -1005,6 +1005,7 @@ public class Application extends Controller {
 					rc.name = rs.name;
 					if(ub.raceId != null && ub.horseId != null){
 						WinResults win = WinResults.getresulttByRaceIdHorseId(ub.raceId,ub.horseId);
+						if(win != null) {
 						WinResultsVM winResultsVM = new WinResultsVM();
 						winResultsVM.id = win.id;
 						winResultsVM.name = win.name;
@@ -1014,6 +1015,7 @@ public class Application extends Controller {
 						winResultsVM.wgt = win.wgt;
 						winResultsVM.raceid = win.raceid;
 						rc.winResultsVMs.add(winResultsVM);
+                                                }
 	    		}
 				winrs.add(rc);			
 	        }
