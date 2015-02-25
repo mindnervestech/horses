@@ -939,40 +939,48 @@ public class Application extends Controller {
     	cal.set(Calendar.MINUTE,0);
     	cal.set(Calendar.SECOND,0);
     	cal.set(Calendar.MILLISECOND,0);
-
     	Date d = cal.getTime();
     	List<TournamentVM> winrs = new ArrayList<>();
     	List<Tournament> tournaments = Tournament.getTournamentByDate(d);
     	for(Tournament trn:tournaments){
-    		TournamentVM tr = new TournamentVM();
-    		tr.name = trn.name;
-    		tr.tournamentId = trn.tournamentId;
-    		List<Races> races = Races.getRaceByTourId(trn.tournamentId);
-    		for(Races rs:races){
-				RaceVM rc = new RaceVM();
-				rc.raceId = rs.raceid;
-				rc.name = rs.name;
-				List<WinResults> winResults = WinResults.getresulttByRaceId(rc.raceId);
-				if(winResults.size() > 0){	
-					for(WinResults win:winResults){
-						WinResultsVM winResultsVM = new WinResultsVM();
-						winResultsVM.id = win.id;
-						winResultsVM.name = win.name;
-						winResultsVM.jockey = win.jockey;
-						winResultsVM.position = win.position;
-						winResultsVM.number = win.number;
-						winResultsVM.wgt = win.wgt;
-						winResultsVM.raceid = win.raceid;
-						rc.winResultsVMs.add(winResultsVM);
-					}
-					tr.allRaces.add(rc);
-				}
-	
-					
-				
+    		if(trn.races.size() > 0){
+    			TournamentVM tr = new TournamentVM();
+    			tr.name = trn.name;
+    			tr.tournamentId = trn.tournamentId;
+    			for(Races rs:trn.races){
+    				List<WinResults> winResults = WinResults.getresulttByRaceId(rs.raceid);
+    				if(winResults.size() > 0){	
+    					RaceVM rc = new RaceVM();
+    					rc.raceId = rs.raceid;
+    					rc.name = rs.name;
+    					rc.winResultsVMs = new ArrayList<WinResultsVM>();
+    					Calendar cal1 = Calendar.getInstance();
+    					cal1.setTime(winResults.get(0).version);
+    					for(WinResults win:winResults){
+    						Calendar cal2 = Calendar.getInstance();
+    						cal2.setTime(win.version);
+    						if(cal2.get(Calendar.YEAR)==cal1.get(Calendar.YEAR)&& cal2.get(Calendar.DAY_OF_YEAR)==cal1.get(Calendar.DAY_OF_YEAR)){
+    							WinResultsVM winResultsVM = new WinResultsVM();
+    							winResultsVM.id = win.id;
+    							winResultsVM.name = win.name;
+    							winResultsVM.jockey = win.jockey;
+    							winResultsVM.position = win.position;
+    							winResultsVM.number = win.number;
+    							winResultsVM.wgt = win.wgt;
+    							winResultsVM.raceid = win.raceid;
+    							rc.winResultsVMs.add(winResultsVM);
+    						}else{
+    							break;
+    						}
+    					}
+    					tr.allRaces.add(rc);
+    				}
+    			}
+    			if(tr.allRaces.size()>0) {
+    				winrs.add(tr);
+    			}
     		}
-    		winrs.add(tr);
-    }	
+    	}	
     	return ok(Json.toJson(winrs));
     }
     
