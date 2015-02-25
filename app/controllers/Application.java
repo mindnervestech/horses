@@ -144,7 +144,8 @@ public class Application extends Controller {
     				Node childNode = chlist.item(j);
     				Bet bet = new Bet();
     				if (childNode.getNodeType() == Node.ELEMENT_NODE) {
-    					Element eElement = (Element) childNode;
+    				    try {	
+                                        Element eElement = (Element) childNode;
     					bet.name = eElement.getAttribute("name");
     					bet.shortName = eElement.getAttribute("short-name");
     					bet.betId = eElement.getAttribute("id");
@@ -170,6 +171,9 @@ public class Application extends Controller {
     						bet.event = event;
         					betList.add(bet);
     					}
+                                     } catch(Exception e) {
+                                         e.printStackTrace();
+                                     }
     				}
     			}
     		}
