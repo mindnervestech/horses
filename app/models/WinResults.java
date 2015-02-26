@@ -42,7 +42,7 @@ public class WinResults extends Model{
 	}
 	
 	public static List<WinResults> getresulttByRaceId(String raceid) {
-		return find.where().eq("raceid", raceid).findList();
+		return find.where().eq("raceid", raceid).orderBy("-version").findList();
 	}
 
 	public static WinResults getresulttByRaceIdHorseId(String raceid,

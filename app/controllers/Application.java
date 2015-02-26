@@ -1009,37 +1009,38 @@ public class Application extends Controller {
 	        String email = json.path("email").asText();
 	        User user = User.findByUserEmail(email);
 	        List<saveBetVM> winrs = new ArrayList<>();
-	        UserBet userBet = UserBet.getUserBetsByUser(user);
-	        //for(UserBet ub:userBet){
+	        List<UserBet> userBet = UserBet.getUserBetsByUser(user);
+	        for(UserBet ub:userBet){
 	        	saveBetVM saveBetVM = new saveBetVM();
-	        	saveBetVM.name = userBet.betName;
-	        	Races races = Races.getRaceListByraceId(userBet.raceId);
-	    		//for(Races rs:races){
+	        	saveBetVM.name = ub.betName;
+	        	Races races = Races.getRaceListByraceId(ub.raceId);
 					RaceVM rc = new RaceVM();
 					rc.raceId = races.raceid;
 					rc.name = races.name;
-					if(userBet.raceId != null){
-						List<UserBetDetails> ued = UserBetDetails.getByUserAndBetId(userBet);
+					if(ub.raceId != null){
+						List<UserBetDetails> ued = UserBetDetails.getByUserAndBetId(ub);
 						for(UserBetDetails rs:ued){
-						WinResults win = WinResults.getresulttByRaceIdHorseId(userBet.raceId,rs.horseId);
-						if(win != null){
-						WinResultsVM winResultsVM = new WinResultsVM();
-						winResultsVM.id = win.id;
-						winResultsVM.name = win.name;
-						winResultsVM.jockey = win.jockey;
-						winResultsVM.position = win.position;
-						winResultsVM.number = win.number;
-						winResultsVM.wgt = win.wgt;
-						winResultsVM.raceid = win.raceid;
-						rc.winResultsVMs.add(winResultsVM);
-						}	
-	    		}
-			}			
+							WinResults win = WinResults.getresulttByRaceIdHorseId(ub.raceId,rs.horseId);
+								if(win != null){
+									WinResultsVM winResultsVM = new WinResultsVM();
+									winResultsVM.id = win.id;
+									winResultsVM.name = win.name;
+									winResultsVM.jockey = win.jockey;
+									winResultsVM.position = win.position;
+									winResultsVM.number = win.number;
+									winResultsVM.wgt = win.wgt;
+									winResultsVM.raceid = win.raceid;
+									if(rc.winResultsVMs == null){
+										rc.winResultsVMs = new ArrayList<WinResultsVM>();
+										rc.winResultsVMs.add(winResultsVM);
+									}
+									
+						    }	
+						}
+					}			
 				saveBetVM.allRaces.add(rc);
-					//winrs.add(rc);			
-	        //}
 	    		winrs.add(saveBetVM);
-	     // }  
+	      }  
 	        
     	return ok(Json.toJson(winrs));
     }
