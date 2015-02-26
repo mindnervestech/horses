@@ -1017,6 +1017,7 @@ public class Application extends Controller {
 					RaceVM rc = new RaceVM();
 					rc.raceId = races.raceid;
 					rc.name = races.name;
+					rc.winResultsVMs = new ArrayList<WinResultsVM>();
 					if(ub.raceId != null){
 						List<UserBetDetails> ued = UserBetDetails.getByUserAndBetId(ub);
 						for(UserBetDetails rs:ued){
@@ -1030,10 +1031,8 @@ public class Application extends Controller {
 									winResultsVM.number = win.number;
 									winResultsVM.wgt = win.wgt;
 									winResultsVM.raceid = win.raceid;
-									if(rc.winResultsVMs == null){
-										rc.winResultsVMs = new ArrayList<WinResultsVM>();
-										rc.winResultsVMs.add(winResultsVM);
-									}
+									rc.winResultsVMs.add(winResultsVM);
+									
 									
 						    }	
 						}
