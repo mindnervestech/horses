@@ -1020,7 +1020,7 @@ public class Application extends Controller {
 					if(ub.raceId != null){
 						List<UserBetDetails> ued = UserBetDetails.getByUserAndBetId(ub);
 						for(UserBetDetails rs:ued){
-							WinResults win = WinResults.getresulttByRaceIdHorseId(ub.raceId,rs.horseId);
+							WinResults win = WinResults.getresulttByRaceIdHorseId(races.raceid,rs.horseId);
 								if(win != null){
 									WinResultsVM winResultsVM = new WinResultsVM();
 									winResultsVM.id = win.id;
