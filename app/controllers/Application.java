@@ -921,16 +921,12 @@ public class Application extends Controller {
 			}
 			runnerresults.add(rn);	
 		}
-		
-    	
-    	
+	
     	return ok(Json.toJson(runnerresults));
     }
     
     
-    
     public static Result getWinResultByDate(String date) throws ParseException {
-    	System.out.println("Date ---"+date);
     	SimpleDateFormat dt = new SimpleDateFormat("yyyy-MM-dd");
     	Date raceDate = dt.parse(date);
     	Calendar cal = Calendar.getInstance();
@@ -939,6 +935,21 @@ public class Application extends Controller {
     	cal.set(Calendar.MINUTE,0);
     	cal.set(Calendar.SECOND,0);
     	cal.set(Calendar.MILLISECOND,0);
+    	List<TournamentVM> results = getLastKnownTournamentResultByDate(d);
+    	
+    	int i = 0 ; 
+    	while(i < 5 && results.size() == 0) {
+    		cal.add(Calendar.DAY_OF_YEAR, -1);
+    		i++;
+    		results = getLastKnownTournamentResultByDate(cal);
+    	}
+    	
+    	return ok(Json.toJson(results));
+    	
+    }
+    
+    public static List<TournamentVM> getLastKnownTournamentResultByDate(Calendar cal) throws ParseException {
+    	Date d = cal.getTime();
     	Date d = cal.getTime();
     	List<TournamentVM> winrs = new ArrayList<>();
     	List<Tournament> tournaments = Tournament.getTournamentByDate(d);
@@ -981,7 +992,11 @@ public class Application extends Controller {
     			}
     		}
     	}	
-    	return ok(Json.toJson(winrs));
+    	return winrs;
+    }
+    
+    public static Result getWinResultByDate1(String date) throws ParseException {
+    	return ok(Json.toJson(getLastKnownTournamentResultByDate(date)));
     }
     
     public static Result getWinResultById(String id) throws ParseException {
