@@ -1027,10 +1027,9 @@ public class Application extends Controller {
 	        	saveBetVM saveBetVM = new saveBetVM();
 	        	saveBetVM.name = ub.betName;
 	        	Races races = Races.getRaceListByraceId(ub.raceId);
-					RaceVM rc = new RaceVM();
-					rc.raceId = races.raceid;
-					rc.name = races.name;
-					rc.winResultsVMs = new ArrayList<WinResultsVM>();
+					saveBetVM.raceName = races.name;
+					saveBetVM.winResultsVMs = new ArrayList<WinResultsVM>();
+					saveBetVM.raceId = ub.raceId;
 					if(ub.raceId != null){
 						List<UserBetDetails> ued = UserBetDetails.getByUserAndBetId(ub);
 						for(UserBetDetails rs:ued){
@@ -1044,13 +1043,13 @@ public class Application extends Controller {
 									winResultsVM.number = win.number;
 									winResultsVM.wgt = win.wgt;
 									winResultsVM.raceid = win.raceid;
-									rc.winResultsVMs.add(winResultsVM);
+									saveBetVM.winResultsVMs.add(winResultsVM);
 									
 									
 						    }	
 						}
 					}			
-				saveBetVM.allRaces.add(rc);
+				
 	    		winrs.add(saveBetVM);
 	      }  
 	        

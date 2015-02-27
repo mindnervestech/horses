@@ -808,6 +808,7 @@ public class Application extends Controller {
 						for(Scores.Tournament.Race.Runners.Horse horse:race.getRunners().getHorse()) {
 							Runners horseObj = Runners.getByHorseId(horse.getId(),race.getId());
 							List<Bookmakers> bookmakersList = new ArrayList<>();
+								if(race.getOdds() == null || race.getOdds().getHorse() ==null) continue;
 								for(Scores.Tournament.Race.Odds.Horse hrs : race.getOdds().getHorse()){
 									if(horseObj.horseId.equals(hrs.getId())){
 									for(Scores.Tournament.Race.Odds.Horse.Bookmakers.Bookmaker obj: hrs.getBookmakers().getBookmaker()) {
@@ -1026,10 +1027,8 @@ public class Application extends Controller {
 	        	saveBetVM saveBetVM = new saveBetVM();
 	        	saveBetVM.name = ub.betName;
 	        	Races races = Races.getRaceListByraceId(ub.raceId);
-					RaceVM rc = new RaceVM();
-					rc.raceId = races.raceid;
-					rc.name = races.name;
-					rc.winResultsVMs = new ArrayList<WinResultsVM>();
+					saveBetVM.raceName = races.name;
+					saveBetVM.winResultsVMs = new ArrayList<WinResultsVM>();
 					if(ub.raceId != null){
 						List<UserBetDetails> ued = UserBetDetails.getByUserAndBetId(ub);
 						for(UserBetDetails rs:ued){
@@ -1043,13 +1042,13 @@ public class Application extends Controller {
 									winResultsVM.number = win.number;
 									winResultsVM.wgt = win.wgt;
 									winResultsVM.raceid = win.raceid;
-									rc.winResultsVMs.add(winResultsVM);
+									saveBetVM.winResultsVMs.add(winResultsVM);
 									
 									
 						    }	
 						}
 					}			
-				saveBetVM.allRaces.add(rc);
+				
 	    		winrs.add(saveBetVM);
 	      }  
 	        
