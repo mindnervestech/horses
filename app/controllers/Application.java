@@ -935,7 +935,7 @@ public class Application extends Controller {
     	cal.set(Calendar.MINUTE,0);
     	cal.set(Calendar.SECOND,0);
     	cal.set(Calendar.MILLISECOND,0);
-    	List<TournamentVM> results = getLastKnownTournamentResultByDate(d);
+    	List<TournamentVM> results = getLastKnownTournamentResultByDate(cal);
     	
     	int i = 0 ; 
     	while(i < 5 && results.size() == 0) {

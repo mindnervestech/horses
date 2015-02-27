@@ -994,9 +994,7 @@ public class Application extends Controller {
     	return winrs;
     }
     
-    public static Result getWinResultByDate1(String date) throws ParseException {
-    	return ok(Json.toJson(getLastKnownTournamentResultByDate(date)));
-    }
+    
     
     public static Result getWinResultById(String id) throws ParseException {
     	List<WinResultsVM> winrs = new ArrayList<>();
