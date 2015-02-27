@@ -16,32 +16,10 @@ public class Global extends GlobalSettings {
 	
 	@Override
 	public void onStart(Application app) {
+		
+		
+		
 		ActorSystem getLiveGame = Akka.system();
-		getLiveGame.scheduler().schedule(
-				Duration.create(1000, TimeUnit.MILLISECONDS),
-				Duration.create(5, TimeUnit.MINUTES), new Runnable() {
-					public void run() {
-						try {
-							controllers.Application.readXMLFile();
-						} catch (Exception e) {
-							e.printStackTrace();
-						}
-					}
-				}, getLiveGame.dispatcher());
-		
-		ActorSystem getResults = Akka.system();
-		getLiveGame.scheduler().schedule(
-				Duration.create(0, TimeUnit.MILLISECONDS),
-				Duration.create(15, TimeUnit.MINUTES), new Runnable() {
-					public void run() {
-						try {
-							controllers.Application.getResults();
-						} catch (Exception e) {
-							e.printStackTrace();
-						}
-					}
-				}, getResults.dispatcher());
-		
 		getLiveGame.scheduler().schedule(
 				Duration.create(1000, TimeUnit.MILLISECONDS),
 				Duration.create(5, TimeUnit.MINUTES), new Runnable() {
