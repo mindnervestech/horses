@@ -808,6 +808,7 @@ public class Application extends Controller {
 						for(Scores.Tournament.Race.Runners.Horse horse:race.getRunners().getHorse()) {
 							Runners horseObj = Runners.getByHorseId(horse.getId(),race.getId());
 							List<Bookmakers> bookmakersList = new ArrayList<>();
+								if(race.getOdds() == null || race.getOdds().getHorse() ==null) continue;
 								for(Scores.Tournament.Race.Odds.Horse hrs : race.getOdds().getHorse()){
 									if(horseObj.horseId.equals(hrs.getId())){
 									for(Scores.Tournament.Race.Odds.Horse.Bookmakers.Bookmaker obj: hrs.getBookmakers().getBookmaker()) {
