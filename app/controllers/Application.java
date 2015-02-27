@@ -950,7 +950,6 @@ public class Application extends Controller {
     
     public static List<TournamentVM> getLastKnownTournamentResultByDate(Calendar cal) throws ParseException {
     	Date d = cal.getTime();
-    	Date d = cal.getTime();
     	List<TournamentVM> winrs = new ArrayList<>();
     	List<Tournament> tournaments = Tournament.getTournamentByDate(d);
     	for(Tournament trn:tournaments){
@@ -995,9 +994,7 @@ public class Application extends Controller {
     	return winrs;
     }
     
-    public static Result getWinResultByDate1(String date) throws ParseException {
-    	return ok(Json.toJson(getLastKnownTournamentResultByDate(date)));
-    }
+    
     
     public static Result getWinResultById(String id) throws ParseException {
     	List<WinResultsVM> winrs = new ArrayList<>();
