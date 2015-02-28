@@ -5,7 +5,6 @@
 # Home page
 GET     /                           controllers.Application.index()
 
-GET		/parseXml					controllers.Application.readXMLFile()
 GET		/getVenuesByDate/:date			controllers.Application.getVenuesByDate(date: String)
 GET		/getGameByVenueAndDate/:venue/:date		controllers.Application.getGameByVenueAndDate(venue: String,date: String)
 GET		/getHorsesForGameID/:eventId				controllers.Application.getHorsesForGameID(eventId: String)
@@ -20,7 +19,6 @@ POST	/BetResultByUser               controllers.Application.BetResultByUser()
 # Map static resources from the /public folder to the /assets URL path
 GET     /assets/*file               controllers.Assets.at(path="/public", file)
 
-GET		/getResults					controllers.Application.getResults()
 
 GET		/getTournament/:date					controllers.Application.getTournament(date: String)
 
