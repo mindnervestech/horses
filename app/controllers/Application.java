@@ -735,7 +735,7 @@ public class Application extends Controller {
 						List<UserBetDetails> ued = UserBetDetails.getByUserAndBetId(ub);
 						for(UserBetDetails rs:ued){
 							WinResults win = WinResults.getresulttByRaceIdHorseId(races.raceid,rs.horseId);
-							Runners runner = Runners.getByHorseId(races.raceid,rs.horseId);
+							Runners runner = Runners.getByHorseId(rs.horseId,races.raceid);
 							WinResultsVM winResultsVM = new WinResultsVM();
 							
 								if(win != null) {
