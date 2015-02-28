@@ -1676,7 +1676,7 @@ public class Scores {
                     }
                     
                     public String getTrainer() {
-                        return number;
+                        return trainer;
                     }
                     
                     public void setTrainer(String value) {
