@@ -488,12 +488,19 @@ public class Application extends Controller {
 						}
 						r.runners = runner;
 						r.winResults = winresults;
+						Races _race = Races.getRaceByraceId(race.getId()+"");
+						if(_race != null && (_race.winResults ==null || _race.winResults.size() == 0)) {
+							_race.winResults = winresults;
+							System.out.println("Updating win results");
+							_race.update();
+						}
 						races.add(r);
 					}
 						
 					t.races = races;
 					Tournament tnmt = Tournament.getTournament(t.name, t.date, t.tournamentId);
 					if(tnmt == null) {
+						System.out.println("Saving new tournament");
 						t.save();
 					}
 					
