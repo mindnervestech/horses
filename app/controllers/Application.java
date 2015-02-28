@@ -82,126 +82,7 @@ public class Application extends Controller {
         return ok(index.render("Your new application is ready."));
     }
   
-    public static Result readXMLFile() {
-    	System.out.println("called.................");
-    	try {
-    	
-    	URL url = new URL("http://xml.betfred.com/horse-racing-uk.xml");
-    	BufferedReader in = new BufferedReader(new InputStreamReader(url.openStream()));
-    	DocumentBuilderFactory dbFactory = DocumentBuilderFactory.newInstance();
-    	DocumentBuilder dBuilder = dbFactory.newDocumentBuilder();
-    	Document doc = dBuilder.parse(url.openStream());
-    	 
-     
-    	NodeList nList = doc.getElementsByTagName("event");
-     
-    	for (int temp = 0; temp < nList.getLength(); temp++) {
-     
-    		Node nNode = nList.item(temp);
-    		
-    		Event event = new Event();
-    		List<Bet> betList = new ArrayList<>();
-    		if (nNode.getNodeType() == Node.ELEMENT_NODE) {
-    		     
-    			Element eElement = (Element) nNode;
-    			
-    			event.name = eElement.getAttribute("name");
-    			event.eventId = eElement.getAttribute("eventid");
-    			String str = eElement.getAttribute("date");
-    			SimpleDateFormat dt = new SimpleDateFormat("yyyyMMdd");
-    			Calendar cal = Calendar.getInstance();
-    			Date date = dt.parse(str);
-    			cal.setTime(date);
-    			event.eventDate = cal.getTime();
-    			int hr = Integer.parseInt(eElement.getAttribute("time").substring(0, 2));
-    			int mnt = Integer.parseInt(eElement.getAttribute("time").substring(2, 4));
-    			cal.set(cal.HOUR_OF_DAY,hr);
-    			cal.set(cal.MINUTE, mnt);
-    			event.eventTime = cal.getTime();
-    			event.meeting = eElement.getAttribute("meeting");
-    			event.venue = eElement.getAttribute("venue");
-    		}
-    		NodeList lst = nNode.getChildNodes();
-    		for(int i = 0; i< lst.getLength(); i++) {
-    			Node node = lst.item(i);
-    			if (node.getNodeType() == Node.ELEMENT_NODE) {
-    				Element eElement = (Element) node;
-    				String str2 = eElement.getAttribute("bet-start-date");
-        			SimpleDateFormat dt = new SimpleDateFormat("yyyyMMdd");
-        			Date date2 = dt.parse(str2);
-        			Calendar cal2 = Calendar.getInstance();
-        			cal2.setTime(date2);
-        			event.betStartDate = cal2.getTime();
-        			cal2.set(cal2.HOUR_OF_DAY,Integer.parseInt(eElement.getAttribute("bet-start-time").substring(0, 2)));
-        			cal2.set(cal2.MINUTE, Integer.parseInt(eElement.getAttribute("bet-start-time").substring(2, 4)));
-        			event.betStartTime = cal2.getTime();
-        			event.betName = eElement.getAttribute("name");
-        			event.betTypeId =  eElement.getAttribute("bettypeid");
-    			}
-    			NodeList chlist = node.getChildNodes();
-    			
-    			for(int j = 0; j<chlist.getLength(); j++) {
-    				Node childNode = chlist.item(j);
-    				Bet bet = new Bet();
-    				if (childNode.getNodeType() == Node.ELEMENT_NODE) {
-    				    try {	
-                                        Element eElement = (Element) childNode;
-    					bet.name = eElement.getAttribute("name");
-    					bet.shortName = eElement.getAttribute("short-name");
-    					bet.betId = eElement.getAttribute("id");
-    					bet.price = eElement.getAttribute("price");
-    					if(eElement.hasAttribute("priceDecimal")) {
-    						bet.priceDecimal = Float.parseFloat(eElement.getAttribute("priceDecimal"));
-    					}
-    					if(eElement.hasAttribute("priceUS")) {
-    						bet.priceUs = Float.parseFloat(eElement.getAttribute("priceUS"));
-    					}
-    					if(eElement.hasAttribute("active-price-types")) {
-    						bet.activePriceTypes = eElement.getAttribute("active-price-types");
-    					}
-    					Bet betObject = Bet.findByBetId(bet.betId);
-    					if(betObject != null) {
-    						betObject.shortName = bet.shortName;
-    						betObject.price = bet.price;
-    						betObject.priceDecimal = bet.priceDecimal;
-    						betObject.priceUs = bet.priceUs;
-    						betObject.activePriceTypes = bet.activePriceTypes;
-    						Ebean.update(betObject);
-    					} else {
-    						bet.event = event;
-        					betList.add(bet);
-    					}
-                                     } catch(Exception e) {
-                                         e.printStackTrace();
-                                     }
-    				}
-    			}
-    		}
-    		event.bet = betList;
-    		Event eventObject = Event.findByEventId(event.eventId);
-    		if(eventObject != null) {
-    			eventObject.name = event.name;
-    			eventObject.eventId = event.eventId;
-    			eventObject.eventDate = event.eventDate;
-    			eventObject.eventTime = event.eventTime;
-    			eventObject.meeting = event.meeting;
-    			eventObject.venue = event.venue;
-    			eventObject.betStartDate = event.betStartDate;
-    			eventObject.betStartTime = event.betStartTime;
-    			eventObject.betName = event.betName;
-    			eventObject.betTypeId = event.betTypeId;
-    			eventObject.bet = event.bet;
-    			Ebean.update(eventObject);
-    		} else {
-    			Ebean.save(event);
-    		}
-    	}
-    	} catch(Exception e) {
-    		e.printStackTrace();
-    	}
-    	return ok();
-    }
-    
+       
     public static Result getVenuesByDate(String date) {
     	SimpleDateFormat dt = new SimpleDateFormat("yyyy-mm-dd");
     	List<String> venueList = new ArrayList<>();
@@ -417,197 +298,9 @@ public class Application extends Controller {
     	}
     }
     
-    public static Result getResults() {
-    	/*Map<String, String> map = new HashMap<>();
-    	List<WinResults> win = WinResults.getAllWinResult();
-    	
-    	for(WinResults winres: win) {
-    		List<UserBet> uBet = UserBet.getUserBetByRaceId(winres.raceid);
-    		Races races = Races.getRaceByraceId(winres.raceid);
-    		for(UserBet userbet: uBet) {
-    			if(userbet.raceId.equals(winres.raceid) && userbet.horseId.equals(winres.horseid)) {
-    				String pos = winres.position;
-    				if(pos.equals("1")) {
-    					final Body body = new Body("You won for bet: "+winres.name+"for date and time: "+winres.version);
-				        Mailer.getDefaultMailer().sendMail("Bet result",
-				            body, userbet.user.email);
-    				}
-    				if(pos.equals("2")) {
-    					final Body body = new Body("Your position 2 for bet: "+winres.name+"    for date and time: "+winres.version);
-				        Mailer.getDefaultMailer().sendMail("Bet result",
-				            body, userbet.user.email);
-    				}
-    				if(pos.equals("3")) {
-    					final Body body = new Body("Your position 3 for bet: "+winres.name+"    for date and time: "+winres.version);
-				        Mailer.getDefaultMailer().sendMail("Bet result",
-				            body, userbet.user.email);
-    				}
-    			} else {
-    				final Body body = new Body("You lose for bet: "+winres.name+"    for date and time: "+winres.version);
-			        Mailer.getDefaultMailer().sendMail("Bet result",
-			            body, userbet.user.email);
-    			}
-    			String token = userbet.user.idevice;
-    			if(token != null){
-    				String msg = "Bet Name :"+winres.name+"Race Name :"+races.name+"Horse Name : "+winres.name;
-    				sendPushNotification(token,msg);
-    			}
-    		}
-    		winres.flag = true;
-    		winres.update();
-    	}
-    	
-			map.put("200", "USER WON RESULT");*/
-			return ok();
-		
-    }
+   
     
-   /* public static Result getResults() throws ParseException{
-    	org.jsoup.nodes.Document doc = null;
-		try {
-			doc = Jsoup.connect("http://betfred.chromaagency.com/results").get();
-		} catch (IOException e) {
-			e.printStackTrace();
-		}
-		org.jsoup.nodes.Element main = doc.getElementById("main");
-		Elements tables = main.getElementsByClass("table10");
-		Date d = new Date();
-		SimpleDateFormat dtdf = new SimpleDateFormat("yyyy-MM-dd");
-    	SimpleDateFormat timedf = new SimpleDateFormat("HH:mm");
-		for(org.jsoup.nodes.Element t:tables){
-			Results res = new Results();
-			boolean flag = false;
-			org.jsoup.nodes.Element row = t.getElementsByTag("tr").first();
-			Elements columns = row.children();
-			Map<String, Object> mainMap = new HashMap<>();
-			List<Map<String,Object>> maps = new ArrayList<>();
-			for(org.jsoup.nodes.Element c:columns){
-				if(columns.indexOf(c) == 0){
-					org.jsoup.nodes.Element time = c.getElementsByTag("strong").first();
-					String[] timeVenue = time.text().split(" ", 2);
-					if (timeVenue[1].indexOf("Abandoned") == -1){
-						flag = true;
-					}
-					res.venue = timeVenue[1];
-					res.meeting = timeVenue[1];
-					String[] strArr = timeVenue[0].split("\\.", 2);
-					Calendar cal = Calendar.getInstance();
-	    			cal.setTime(d);
-	    			cal.set(cal.HOUR_OF_DAY,0);
-	    			cal.set(cal.MINUTE,0);
-	    			cal.set(cal.SECOND,0);
-	    			d = cal.getTime();
-	    			res.eventDate = cal.getTime();
-	    			cal.set(cal.HOUR_OF_DAY, Integer.parseInt(strArr[0]));
-	    			cal.set(cal.MINUTE, Integer.parseInt(strArr[1]));
-	    			cal.set(cal.SECOND,0);
-	    			res.eventTime = cal.getTime();
-				}
-				if(columns.indexOf(c) == 1){
-					Elements ranks = c.getElementsByTag("tr");
-					int count = 1;
-					for(org.jsoup.nodes.Element r:ranks){
-						Map<String, Object> map = new HashMap<>();
-						map.put("position", count++);
-						org.jsoup.nodes.Element info = r.getElementsByTag("td").get(3);
-						Elements data = info.getElementsByTag("li"); 
-						for(org.jsoup.nodes.Element i:data){
-							if(data.indexOf(i) == 0){
-								map.put("name", i.children().first().text());
-							}
-							if(data.indexOf(i) == 1){
-								map.put("odds", i.text());
-							}
-							if(data.indexOf(i) == 2){
-								map.put("trainer", i.children().first().text());
-								map.put("jockey", i.children().last().text());
-							}
-						}
-						maps.add(map);
-					}
-				}
-			}
-			mainMap.put("results", maps);
-			JSONObject obj = new JSONObject(mainMap);
-			res.results = obj.toString();
-			Results res1 = Results.findByDateTimeVenue(res.eventDate,res.eventTime,res.meeting);
-			if(res1 == null && flag == true){
-				res.save();
-				
-				List<UserBet> userBets = UserBet.getUserBetByRaceId(raceId)
-		    	
-				try {
-					obj = new JSONObject(res.results);
-					JSONArray array = (JSONArray)obj.get("results");
-					
-					for(UserBet userbet: userBets) {
-						
-			    		Bet bet = Bet.findByBetId(userbet.raceId);
-			    		
-			    		for(int i=0;i<array.length();i++) {
-			    			
-			    			JSONObject obj2 = (JSONObject)array.get(i);
-			    			
-			    			if(bet.name.equals(obj2.get("name"))) {
-			    				int pos = (Integer)obj2.get("position");
-			    				if(pos == 1) {
-			    					final Body body = new Body("You won for bet: "+bet.name+"    for date and time: "+bet.event.betStartTime+"    venue :"+bet.event.venue);
-							        Mailer.getDefaultMailer().sendMail("Bet result",
-							            body, userbet.user.email);
-			    				}
-			    				if(pos == 2) {
-			    					final Body body = new Body("Your position 2 for bet: "+bet.name+"    for date and time: "+bet.event.betStartTime+"    venue :"+bet.event.venue);
-							        Mailer.getDefaultMailer().sendMail("Bet result",
-							            body, userbet.user.email);
-			    				}
-			    				if(pos == 3) {
-			    					final Body body = new Body("Your position 3 for bet: "+bet.name+"    for date and time: "+bet.event.betStartTime+"    venue :"+bet.event.venue);
-							        Mailer.getDefaultMailer().sendMail("Bet result",
-							            body, userbet.user.email);
-			    				}
-			    			} else {
-			    				final Body body = new Body("You lose for bet: "+bet.name+"    for date and time: "+bet.event.betStartTime+"    venue :"+bet.event.venue);
-						        Mailer.getDefaultMailer().sendMail("Bet result",
-						            body, userbet.user.email);
-			    			}
-			    		}
-			    	}
-				} catch (JSONException e) {
-					// TODO Auto-generated catch block
-					e.printStackTrace();
-				}
-			}
-		}
-		List<ResultsVM> results = new ArrayList<>();
-		List<Results> resList = Results.findByEventDate(d);
-		for(Results r:resList){
-			ResultsVM vm = new ResultsVM();
-			vm.id =r.id;
-			vm.eventDate = r.eventDate.toString();
-			vm.eventTime = r.eventTime.toString();
-			vm.meeting = r.meeting;
-			vm.venue = r.venue;
-			vm.version = r.version.toString();
-			JsonNode node = Json.parse(r.results);
-			JsonNode ranking = node.path("results");
-			ArrayNode positions = (ArrayNode) ranking;
-			for(int i=0;i<positions.size();i++){
-				JsonNode horse = positions.get(i);
-			    Rank extra = new Rank();
-			    extra.position = horse.path("position").asInt();
-			    extra.name = horse.path("name").asText();
-			    extra.odds = horse.path("odds").asText();
-			    extra.jockey = horse.path("jockey").asText();
-			    extra.trainer = horse.path("trainer").asText();
-			    vm.results.add(extra);
-			}
-			results.add(vm);
-		}
-		if(results.size() == 0){
-			return ok("No matches today.");
-		}
-    	return ok(Json.toJson(results));
-    }*/
+   
     
     public static Result sendPushNotification(String deviceToken, String msg) {
         System.out.println("sendPushNotification " + lCertificate);
@@ -763,6 +456,7 @@ public class Application extends Controller {
 						r.name = race.getName();
 						r.tid = tournament.getId();
 						r.raceid = race.getId();
+						r.time = race.getTime();
 						if(!race.getDatetime().equals("")) {
 							r.dateTime = df2.parse(race.getDatetime());
 						}
@@ -775,6 +469,9 @@ public class Application extends Controller {
 							run.number = horse.getNumber();
 							run.jockey = horse.getJockey();
 							run.horseId = horse.getId();
+							run.wgt = horse.getWgt();
+							run.age = horse.getAge();
+							run.trainer = horse.getTrainer();
 							runner.add(run);
 						}
 						for(Scores.Tournament.Race.Results.Horse rs:race.getResults().getHorse()) {
@@ -890,6 +587,7 @@ public class Application extends Controller {
 				raceVM.name = rac.name;
 				raceVM.dateTime = rac.dateTime;
 				raceVM.tournamentId = rac.tid;
+				raceVM.time =  rac.time;
 				raceresults.add(raceVM);
 			}
 		}
@@ -909,6 +607,9 @@ public class Application extends Controller {
 			rn.name = run.name;
 			rn.jockey = run.jockey;
 			rn.horseId = run.horseId;
+			rn.wgt = run.wgt;
+			rn.trainer =  run.trainer;
+			rn.age = run.age;
 			List<Bookmakers> bookmakerList = Bookmakers.getBookmakersByRunnerId(run);
 				for(Bookmakers bookm:bookmakerList){
 				BookmakersVM bookVM = new BookmakersVM();
@@ -1034,8 +735,10 @@ public class Application extends Controller {
 						List<UserBetDetails> ued = UserBetDetails.getByUserAndBetId(ub);
 						for(UserBetDetails rs:ued){
 							WinResults win = WinResults.getresulttByRaceIdHorseId(races.raceid,rs.horseId);
-								if(win != null){
-									WinResultsVM winResultsVM = new WinResultsVM();
+							Runners runner = Runners.getByHorseId(races.raceid,rs.horseId);
+							WinResultsVM winResultsVM = new WinResultsVM();
+							
+								if(win != null) {
 									winResultsVM.id = win.id;
 									winResultsVM.name = win.name;
 									winResultsVM.jockey = win.jockey;
@@ -1043,10 +746,15 @@ public class Application extends Controller {
 									winResultsVM.number = win.number;
 									winResultsVM.wgt = win.wgt;
 									winResultsVM.raceid = win.raceid;
-									saveBetVM.winResultsVMs.add(winResultsVM);
-									
-									
-						    }	
+									winResultsVM.result  = "Out";
+							     } else {	
+							    	 winResultsVM.name = runner.name;
+							    	 winResultsVM.jockey = runner.jockey;
+							    	 winResultsVM.wgt = runner.wgt;
+							    	 winResultsVM.raceid = races.raceid;
+							    	 winResultsVM.result = "Awaited";
+							     }
+								saveBetVM.winResultsVMs.add(winResultsVM);
 						}
 					}			
 				

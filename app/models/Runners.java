@@ -28,6 +28,9 @@ public class Runners extends Model {
 	
 	@ManyToOne
 	public Races races;
+	public String wgt;
+	public String age;
+	public String trainer;
 	
 	
 	public static Finder<Long,Runners> find = new Finder<>(Long.class,Runners.class);

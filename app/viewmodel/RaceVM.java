@@ -24,4 +24,5 @@ public class RaceVM {
 	public String raceId;
 	public String tournamentName;
 	public List<WinResultsVM> winResultsVMs;
+	public String time;
 }

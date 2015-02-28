@@ -10,6 +10,7 @@ public class WinResultsVM {
 	public String jockey;
 	public String raceid;
 	//public List<r>
+	public String result;
 	
 	
 }

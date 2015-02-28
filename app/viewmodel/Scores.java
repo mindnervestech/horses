@@ -1624,6 +1624,8 @@ public class Scores {
                     protected String jockey;
                     @XmlAttribute(name = "id")
                     protected String id;
+                    @XmlAttribute(name = "trainer")
+                    protected String trainer;
 
                     /**
                      * Gets the value of the odds property.
@@ -1671,6 +1673,14 @@ public class Scores {
                      */
                     public void setNumber(String value) {
                         this.number = value;
+                    }
+                    
+                    public String getTrainer() {
+                        return number;
+                    }
+                    
+                    public void setTrainer(String value) {
+                        this.trainer = value;
                     }
 
                     /**

@@ -30,6 +30,7 @@ public class Races extends Model {
 	public List<WinResults> winResults;
 	@Version
     public java.util.Date version;
+	public String time;
 	
 	public static Finder<Long,Races> find = new Finder<>(Long.class,Races.class);
 	
