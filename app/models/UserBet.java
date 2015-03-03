@@ -32,6 +32,10 @@ public class UserBet extends Model {
 		return find.where().eq("user", user).findList();
 	}
 	
+	public static UserBet getUserBetsByUserRaceNBetname(User user,String raceId,String betName) {
+		return find.where().eq("user", user).eq("raceId", raceId).eq("betName", betName).findUnique();
+	}
+	
 	public static List<UserBet> getUserBetByRaceId(String raceId) {
 		return find.where().eq("raceId", raceId).findList();
 	}

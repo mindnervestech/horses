@@ -197,7 +197,7 @@ public class Application extends Controller {
     		user.idevice = token;
     		user.update();
     	}else{
-    		map.put("201", "User Does Not Exit! ");
+    		map.put("201", "User Does Not Exist! ");
     		return ok(Json.toJson(map));
     	}
     	map.put("200", "IDEVICE Token save successfully! ");
@@ -800,6 +800,42 @@ public class Application extends Controller {
     	map.put("200", "User updated successfully!");
     	return ok(Json.toJson(map));
     }
-    
+   
+   public static Result deleteUserBets() {
+   	
+   	Map<String, String> map = new HashMap<>();
+   	JsonNode json = request().body().asJson();
+       	 String email = json.path("email").asText();
+       	 JsonNode bets = json.path("bets");
+       	 ArrayNode items = (ArrayNode) bets;
+	   	 System.out.println("bets == "+bets);
+         User user = User.findByUserEmail(email);
+         if(user != null) {
+        	 for(int i=0;i<items.size();i++){
+        		 JsonNode node = items.get(i);
+        		 String rid = node.path("raceid").asText();
+       			String betname = node.path("betname").asText();
+		       		if(rid != null && betname != null){
+			       		UserBet userBet = UserBet.getUserBetsByUserRaceNBetname(user, rid, betname);
+			       			if(userBet != null){
+			       				List<UserBetDetails> userBetDetails = UserBetDetails.getByUserAndBetId(userBet);
+			       				for(UserBetDetails a: userBetDetails){
+			       					a.delete();
+			       				}
+			       			}else {
+			       				map.put("201", "Race or betname Does Not Exist!");
+			       	    		return ok(Json.toJson(map));
+			       	   }
+			       			userBet.delete();
+		       		}
+        	 	}
+		}else {
+			map.put("201", "User Does Not Exist!");
+    		return ok(Json.toJson(map));
+   }
+   	map.put("200", "User deleted successfully!");
+   	return ok(Json.toJson(map));
+       
+  }   
     
 }
