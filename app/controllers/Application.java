@@ -273,6 +273,8 @@ public class Application extends Controller {
     			map.put("email", email);
     			map.put("firstName", user.firstName);
     			map.put("lastName", user.lastName);
+    			map.put("push", user.push);
+    			map.put("oddsformat", user.oddsformat);
     			return ok(Json.toJson(map));
     		}
     	} catch(Exception e) {
@@ -725,7 +727,6 @@ public class Application extends Controller {
     
     
     public static Result BetResultByUser() {
-    	
     	JsonNode json = request().body().asJson();
 	        String email = json.path("email").asText();
 	        User user = User.findByUserEmail(email);
@@ -770,5 +771,35 @@ public class Application extends Controller {
 	        
     	return ok(Json.toJson(winrs));
     }
+    
+    
+   public static Result updateUserProfile() {
+    	
+    	Map<String, String> map = new HashMap<>();
+    	JsonNode json = request().body().asJson();
+        	System.out.println("bets === "+json);
+        	String email = json.path("email").asText();
+        	String fname = json.path("firstName").asText();
+        	System.out.println("name === "+fname);
+        	String lname = json.path("lastName").asText();
+        	String push = json.path("push").asText();
+        	String oddsformat = json.path("oddsformat").asText();
+        	
+	        User user = User.findByUserEmail(email);
+		        if(user != null){
+		        	user.firstName = fname;
+		        	user.lastName = lname;
+		        	user.push = push;
+		        	user.oddsformat = oddsformat;
+		        	user.update();
+		        }else {
+					map.put("201", "Invalid user!");
+		    		return ok(Json.toJson(map));
+				}
+       
+    	map.put("200", "User updated successfully!");
+    	return ok(Json.toJson(map));
+    }
+    
     
 }

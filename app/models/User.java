@@ -22,6 +22,8 @@ public class User extends Model {
 	public String password;
 	public String email;
 	public String idevice;
+	public String push;
+	public String oddsformat;
 	
 	@OneToMany(cascade=CascadeType.ALL)
 	public List<UserBet> userBet;

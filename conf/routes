@@ -14,7 +14,8 @@ POST	/saveBet					controllers.Application.saveBet()
 POST	/changePassword				controllers.Application.changePassword()
 POST	/forgotPassword				controllers.Application.forgotPassword()
 POST    /saveDeviceToken			controllers.Application.saveDeviceToken()
-POST	/BetResultByUser               controllers.Application.BetResultByUser()
+POST	/BetResultByUser            controllers.Application.BetResultByUser()
+POST	/updateUserProfile			controllers.Application.updateUserProfile()
 
 # Map static resources from the /public folder to the /assets URL path
 GET     /assets/*file               controllers.Assets.at(path="/public", file)
