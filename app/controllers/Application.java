@@ -833,7 +833,7 @@ public class Application extends Controller {
 			map.put("201", "User Does Not Exist!");
     		return ok(Json.toJson(map));
    }
-   	map.put("200", "User deleted successfully!");
+   	map.put("200", "Bet deleted successfully!");
    	return ok(Json.toJson(map));
        
   }   
