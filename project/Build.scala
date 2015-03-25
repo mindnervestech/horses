@@ -15,7 +15,8 @@ object ApplicationBuild extends Build {
     "mysql" % "mysql-connector-java" % "5.1.18",
     "org.jsoup" % "jsoup" % "1.8.1",
     "org.json" % "json" % "20090211",
-     "com.feth" %% "play-easymail" % "0.3-SNAPSHOT"
+     "com.feth" %% "play-easymail" % "0.3-SNAPSHOT",
+     "com.fasterxml.jackson.core" % "jackson-databind" % "2.5.1"
   )
 
   val main = play.Project(appName, appVersion, appDependencies).settings(

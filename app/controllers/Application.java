@@ -1,33 +1,24 @@
 package controllers;
 
-import java.io.BufferedReader;
-import java.io.File;
 import java.io.IOException;
-import java.io.InputStreamReader;
-import java.net.MalformedURLException;
 import java.net.URL;
-import java.security.NoSuchAlgorithmException;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.HashMap;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
 import javax.xml.bind.JAXBContext;
 import javax.xml.bind.JAXBException;
 import javax.xml.bind.Unmarshaller;
-import javax.xml.parsers.DocumentBuilder;
-import javax.xml.parsers.DocumentBuilderFactory;
 
 import models.Bet;
 import models.Bookmakers;
 import models.Event;
 import models.Races;
-import models.Results;
 import models.Runners;
 import models.Tournament;
 import models.User;
@@ -35,18 +26,8 @@ import models.UserBet;
 import models.UserBetDetails;
 import models.WinResults;
 
-
 import org.codehaus.jackson.JsonNode;
 import org.codehaus.jackson.node.ArrayNode;
-import org.json.JSONArray;
-import org.json.JSONException;
-import org.json.JSONObject;
-import org.jsoup.Jsoup;
-import org.jsoup.select.Elements;
-import org.w3c.dom.Document;
-import org.w3c.dom.Element;
-import org.w3c.dom.Node;
-import org.w3c.dom.NodeList;
 
 import play.Play;
 import play.data.DynamicForm;
@@ -59,27 +40,25 @@ import viewmodel.BookmakersVM;
 import viewmodel.EventVM;
 import viewmodel.RaceVM;
 import viewmodel.RunnerVM;
+import viewmodel.Scores;
 import viewmodel.TournamentVM;
 import viewmodel.WinResultsVM;
 import viewmodel.saveBetVM;
-import views.html.index;
-import viewmodel.Scores;
 
-import com.avaje.ebean.Ebean;
 import com.avaje.ebean.SqlRow;
 import com.feth.play.module.mail.Mailer;
 import com.feth.play.module.mail.Mailer.Mail.Body;
 import com.notnoop.apns.APNS;
 import com.notnoop.apns.ApnsService;
 
-import controllers.Application.ResultsVM.Rank;
-
 public class Application extends Controller {
   
-	public static final String lCertificate = Play.application().configuration().getString("certificate_loc");
+	//public static final String lCertificate = Play.application().configuration().getString("certificate_loc");
+	public static final String lCertificate = Play.application().path().getAbsolutePath()+"/conf/Certificates1.p12";
 	
     public static Result index() {
-        return ok(index.render("Your new application is ready."));
+        //return ok(index.render("Your new application is ready."));
+    	return ok();
     }
   
        
@@ -301,24 +280,6 @@ public class Application extends Controller {
     }
     
    
-    
-   
-    
-    public static Result sendPushNotification(String deviceToken, String msg) {
-        System.out.println("sendPushNotification " + lCertificate);
-        String password = "";
-        ApnsService service =
-                APNS.newService()
-                .withCert(lCertificate, password)
-                .withSandboxDestination()
-                .build();
-        System.out.println("sendPushNotification");
-        String payload = APNS.newPayload().alertBody(msg).build();
-        com.notnoop.apns.ApnsNotification notification = service.push(deviceToken, payload);
-        System.out.println("Sending notification message!");
-        return ok();
-    }
-        
     public static Result saveBet() {
     	
     	Map<String, String> map = new HashMap<>();
@@ -434,6 +395,21 @@ public class Application extends Controller {
     }
     
     
+    public static Result sendPushNotification(String deviceToken, String msg) {
+        System.out.println("sendPushNotification " + lCertificate);
+        String password = "racing";
+        ApnsService service =
+    		    APNS.newService()
+    		    .withCert(lCertificate, password)
+    		    .withSandboxDestination()
+    		    .build();
+        System.out.println("sendPushNotification");
+        String payload = APNS.newPayload().alertBody(msg).build();
+        com.notnoop.apns.ApnsNotification notification = service.push(deviceToken, payload);
+        System.out.println("Sending notification message!");
+        return ok();
+    }
+    
     
     public static Result getTournamentDetails() throws IOException, ParseException {
     	try {
@@ -497,6 +473,12 @@ public class Application extends Controller {
 							_race.update();
 						}
 						races.add(r);
+						
+						//push notification
+						List<UserBet> bets = UserBet.getUserBetByRaceId(race.getId());
+						for(UserBet b:bets){
+							sendPushNotification(b.user.idevice, "Your results are out!");
+						}
 					}
 						
 					t.races = races;

@@ -18,6 +18,8 @@ POST	/BetResultByUser            controllers.Application.BetResultByUser()
 POST	/updateUserProfile			controllers.Application.updateUserProfile()
 POST    /deleteUserBets             controllers.Application.deleteUserBets()
 
+POST	/sendPushNotification/:deviceToken/:msg 		controllers.Application.sendPushNotification(deviceToken:String,msg:String)
+
 # Map static resources from the /public folder to the /assets URL path
 GET     /assets/*file               controllers.Assets.at(path="/public", file)
 
