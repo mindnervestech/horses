@@ -54,7 +54,7 @@ import com.notnoop.apns.ApnsService;
 public class Application extends Controller {
   
 	//public static final String lCertificate = Play.application().configuration().getString("certificate_loc");
-	public static final String lCertificate = Play.application().path().getAbsolutePath()+"/conf/Certificates1.p12";
+	public static final String lCertificate = Play.application().path().getAbsolutePath()+"/conf/Certificates9.p12";
 	
     public static Result index() {
         //return ok(index.render("Your new application is ready."));
@@ -401,7 +401,7 @@ public class Application extends Controller {
         ApnsService service =
     		    APNS.newService()
     		    .withCert(lCertificate, password)
-    		    .withSandboxDestination()
+    		    .withProductionDestination()
     		    .build();
         System.out.println("sendPushNotification");
         String payload = APNS.newPayload().alertBody(msg).build();
@@ -477,7 +477,11 @@ public class Application extends Controller {
 						//push notification
 						List<UserBet> bets = UserBet.getUserBetByRaceId(race.getId());
 						for(UserBet b:bets){
-							sendPushNotification(b.user.idevice, "Your results are out!");
+							if(b.user.idevice != null){
+								String msg = "Results for " + b.betName + " bet are in!";
+								System.out.println(msg + "======" + b.user.idevice);
+								sendPushNotification(b.user.idevice, msg);
+							}
 						}
 					}
 						
