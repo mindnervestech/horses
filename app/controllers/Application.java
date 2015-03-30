@@ -480,7 +480,10 @@ public class Application extends Controller {
 							if(b.user.idevice != null){
 								String msg = "Results for " + b.betName + " bet are in!";
 								System.out.println(msg + "======" + b.user.idevice);
-								sendPushNotification(b.user.idevice, msg);
+								;
+								sendPushNotification(b.user.idevice,
+										Json.toJson(new PushResult(race.getId(),b.betName,msg)).toString()
+										);
 							}
 						}
 					}
@@ -530,6 +533,32 @@ public class Application extends Controller {
     	return ok();
     }
     
+    
+    public static class PushResult {
+    	Aps aps;
+    	String race_id;
+    	String bet_name;
+    	public PushResult() {
+    		
+    	}
+    	public PushResult (String race_id,String bet_name,String alert ) {
+    		aps = new Aps(alert);
+    		this.race_id = race_id;
+    		this.bet_name = bet_name;
+    	}
+    	
+    	public static class Aps {
+    		String alert;
+        	String sound = "default";
+        	public Aps() {
+        		
+        	}
+        	Aps(String alert) {
+        		this.alert = alert;
+        	}
+        }
+    		
+    }
     
     public static Result getTournament(String date) throws ParseException {
     	System.out.println("Date ---"+date);
